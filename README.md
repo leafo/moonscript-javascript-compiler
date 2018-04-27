@@ -22,9 +22,9 @@ tree with no special instanced nodes that have compiler state in them.
 ## Why JavaScript
 
 It's not clear if this project will result in a fully functional JavaScript
-alternative. MoonScript has a lot of Lua semantics built into its syntax and
-those will not map well to JavaScript. It is not a goal of this project to
-change any of MoonScript's syntax for JavaScript.
+alternative. MoonScript has a lot of Lua semantics built into its syntax that
+will not map well to JavaScript. It is not a goal of this project to change any
+of MoonScript's syntax to be more compatible with JavaScript.
 
 It will allow you to compile a subset of the MoonScript syntax to JavaScript.
 This could be used to have shared code across browser and server that use the
