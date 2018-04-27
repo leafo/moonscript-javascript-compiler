@@ -58,8 +58,6 @@ t = (tbl, ...) ->
       types.number
       else_if_node + else_node
     )) % (val, state) ->
-      require("moon").p state
-
       args = {
         "if ("
         node state.cond
