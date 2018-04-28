@@ -132,6 +132,31 @@ if (something()) {
   "yeah";
 }]]
     }
+    {
+      [[
+x = ->
+  console.log "hello world"
+  return "please"]]
+      [[
+x = function() {
+  console.log("hello world");
+  return "please";
+}]]
+    }
+    {
+      [[y = ->]]
+      [[y = function() { }]]
+    }
+    {
+      [[
+x = (one, two, three) ->
+  return one + two + three]]
+      [[
+x = function(one, two, three) {
+  return one + two + three;
+}]]
+
+    }
   }
 
   for {input, output} in *examples

@@ -138,14 +138,45 @@ t = (tbl, ...) ->
 
     t({
       "chain"
-      types.any\tag "root"
+      (types.any / node)\tag "root"
     }, {
       extra_fields: types.map_of(
         types.number
         types.scope(call_node + dot_node)\tag "actions[]"
       )
     }) % (val, state) ->
-      Line node(state.root), unpack state.actions or {}
+      Line state.root, unpack state.actions or {}
 
+  return: t({
+    "return"
+    t {
+      "explist"
+      (types.any / node)\tag "value"
+    }
+  }) % (val, state) ->
+    Line "return ", state.value
+
+  fndef: t({
+    "fndef"
+    types.array_of types.shape {
+      types.string\tag "args[]"
+    }
+    types.table -- whitelist, unused
+    types.string\tag "type"
+    types.table\tag "block"
+  }) % (val, state) ->
+    args = {
+      "function("
+    }
+
+    if state.args
+      for idx, arg in ipairs state.args
+        table.insert args, ", " unless idx == 1
+        table.insert args, arg
+
+    table.insert args, ") "
+
+    table.insert args, Block "{", "}", state.block
+    Line unpack args
 
 }

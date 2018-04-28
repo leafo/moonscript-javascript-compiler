@@ -47,6 +47,9 @@ class Block
   -- join all the lines at the correct indentation, with header and footer if
   -- necessary
   render: (indent=0) =>
+    unless next @lines
+      return "#{@header} #{@footer}"
+
     prefix = @indentation_char\rep indent
     suffix = ";"
 
