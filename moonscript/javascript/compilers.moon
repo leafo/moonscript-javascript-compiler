@@ -233,13 +233,13 @@ t = (tbl, ...) ->
       types.one_of {
         types.shape {
           "key_literal"
-          (types.string / escape_hash_table_key\transform)\tag "key"
+          (types.string * escape_hash_table_key)\tag "key"
         }
 
         t({
           "string"
           types.string
-          (types.string / escape_hash_table_key\transform)\tag "key"
+          (types.string * escape_hash_table_key)\tag "key"
         })
       }
       (types.any / node)\tag "value"
