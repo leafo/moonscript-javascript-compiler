@@ -1,13 +1,8 @@
 
-import types, BaseType from require "tableshape"
+import types from require "tableshape"
 import Line, Block, node from require "moonscript.javascript.compile"
 
-import split_ntuples from require "moonscript.javascript.util"
-
-class Proxy extends BaseType
-  new: (@fn) =>
-  _transform: (...) => @.fn!\_transform ...
-  _describe: (...) => @.fn!\_describe ...
+import split_ntuples, Proxy from require "moonscript.javascript.util"
 
 proxy_node = (name) ->
   Proxy ->

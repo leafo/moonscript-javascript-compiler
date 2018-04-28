@@ -1,9 +1,9 @@
 
 import types from require "tableshape"
+import Proxy from require "moonscript.javascript.util"
 
 -- debug value
 TEN = {"number", 10}
-
 
 match_node = (name) ->
   types.shape { name }, open: true
@@ -17,19 +17,41 @@ t = (tbl, ...) ->
   tbl[-1] = types.number + types.nil
   types.shape tbl, ...
 
-hoist_declares = types.array_of(types.one_of {
-  t({
+local find_hoistable
+find_hoistable_proxy = Proxy -> find_hoistable
+find_hoistable = types.array_of(types.one_of {
+  t {
     "assign"
     types.shape {
-      t({
+      t {
         "ref"
         types.string\tag "names[]"
-      })
+      }
     }
     types.any
-  })
+  }
+
+  t {
+    "if"
+    types.any
+    find_hoistable_proxy
+  }, extra_fields: types.map_of types.number, types.one_of {
+    t {
+      "elseif"
+      types.any -- cond
+      find_hoistable_proxy
+    }
+
+    t {
+      "else"
+      find_hoistable_proxy
+    }
+  }
+
   types.any
-}) % (val, state) ->
+})
+
+hoist_declares = find_hoistable % (val, state) ->
   if state != true and next state
     {
       {"declare", state.names}

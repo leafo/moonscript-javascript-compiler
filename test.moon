@@ -9,8 +9,12 @@
 
 code = [[
 hello = "world"
-for item in *items
-  print item
+if something
+  x = "cool"
+elseif dork
+  y = "cool"
+else
+  z = 10 + 2
 ]]
 
 parse = require "moonscript.parse"

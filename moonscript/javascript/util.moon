@@ -1,5 +1,14 @@
 
-import types from require "tableshape"
+import types, BaseType from require "tableshape"
+
+class Proxy extends BaseType
+  new: (@fn) =>
+
+  _transform: (...) =>
+    assert(@.fn!, "proxy missing transformer")\_transform ...
+
+  _describe: (...) =>
+    assert(@.fn!, "proxy missing transformer")\_describe ...
 
 reserved_words = types.one_of({
   "case", "catch", "class", "const", "continue", "debugger", "default",
@@ -32,4 +41,4 @@ split_ntuples = (start=1, size=1, rest_name="rest") ->
     out
 
 
-{:split_ntuples}
+{:split_ntuples, :Proxy}
