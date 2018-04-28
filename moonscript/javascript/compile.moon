@@ -74,7 +74,8 @@ class Block
 
       -- quick hacko
       if suffix == ";"
-        unless rendered_line\match "}$"
+        block = line\ending_block!
+        unless block and block.trailing_suffix and rendered_line\match "}$"
           rendered_line ..= suffix
       else
         unless last and not @trailing_suffix
@@ -99,6 +100,12 @@ class Line
             table.insert @chunks, chunk
         else
           table.insert @chunks, arg
+
+  -- returns the block at the end if it exists
+  ending_block: =>
+    last = @chunks[#@chunks]
+    if type(last) == "table" and last.__class == Block
+      last
 
   render: (indentation=0) =>
     out = for chunk in *@chunks

@@ -210,11 +210,48 @@ t = (tbl, ...) ->
       ) % (_, state) -> (state.count or 0) < 40
     }
 
+    escape_hash_table_key = types.one_of {
+      types.pattern("[^a-zA-Z_0-9]") / (name) -> "\"#{name}\""
+      types.any
+    }
+
+    object_tuple = types.scope types.shape({
+      types.one_of {
+        types.shape {
+          "key_literal"
+          (types.string / escape_hash_table_key\transform)\tag "key"
+        }
+
+        t({
+          "string"
+          types.string
+          (types.string / escape_hash_table_key\transform)\tag "key"
+        })
+      }
+      (types.any / node)\tag "value"
+    }) % (value, scope) ->
+      Line scope.key, ": ", scope.value
+
+    empty_table = t({
+      "table"
+      types.equivalent({})\describe "empty table"
+    }) % -> "{}"
+
+    object_table = t({
+      "table"
+      types.array_of object_tuple\tag "fields[]"
+    }) % (value, state) ->
+      b = Block "{", "}", state.fields
+      b.line_suffix = ","
+      b.trailing_suffix = false
+      Line b
+
     array_table = t({
       "table"
-      types.array_of types.shape {
-        (types.any / node)\tag "values[]"
-      }
+      types.array_of(
+        -- we use array of here to prevent eagerly trying mismatched table
+        types.array_of (types.any / node)\tag("values[]"), length: types.literal(1)
+      )
     }) % (val, state) ->
       state = { values: {} } if state == true
 
@@ -234,6 +271,6 @@ t = (tbl, ...) ->
         b.trailing_suffix = false
         Line b
 
-    array_table
+    empty_table + array_table + object_table
 
 }

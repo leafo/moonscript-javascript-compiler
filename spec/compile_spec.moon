@@ -176,7 +176,7 @@ x = function(one, two, three) {
 
     {
       "{}"
-      "[];"
+      "{};"
     }
     {
       [[
@@ -235,7 +235,34 @@ thing([
 ]);]]
     }
 
+    {
+      [[{one: "two"}]]
+      [[{
+  one: "two"
+};]]
+    }
+    {
+      [[
+{
+  hello: "world"
+  class: {1,2,3}
+  " food friends ": {good: "dog"}
+}]]
+      [[{
+  hello: "world",
+  class: [1, 2, 3],
+  " food friends ": {
+    good: "dog"
+  }
+};]]
+    }
 
+    {
+      [[{ :basecrawl }]]
+      [[{
+  basecrawl: basecrawl
+};]]
+    }
   }
 
   for {input, output, :name} in *examples
