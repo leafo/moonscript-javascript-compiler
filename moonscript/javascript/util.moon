@@ -3,7 +3,7 @@ import types from require "tableshape"
 
 -- splits up the remaining numeric fields of a table into groups of size,
 -- stored into rest. See spec/util_spec for examples
-split_ntuples = (start=1, size=1) ->
+split_ntuples = (start=1, size=1, rest_name="rest") ->
   types.table / (t) ->
     out = {}
     for k,v in pairs t
@@ -17,7 +17,7 @@ split_ntuples = (start=1, size=1) ->
       else
         table.insert rest, [t[k] for k=i,i+(size - 1)]
 
-    out.rest = rest
+    out[rest_name] = rest
     out
 
 

@@ -111,6 +111,11 @@ if (one) {
     }
 
     {
+      "one.a + two.b + three.c"
+      "one.a + two.b + three.c;"
+    }
+
+    {
       [[if something.yes then no.way]]
       [[
 if (something.yes) {

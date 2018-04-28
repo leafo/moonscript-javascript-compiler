@@ -2,6 +2,8 @@
 import types, BaseType from require "tableshape"
 import Line, Block, node from require "moonscript.javascript.compile"
 
+import split_ntuples from require "moonscript.javascript.util"
+
 class Proxy extends BaseType
   new: (@fn) =>
   _transform: (...) => @.fn!\_transform ...
@@ -35,7 +37,7 @@ t = (tbl, ...) ->
   number: t({
     "number"
     (types.string + types.number)\tag "value"
-  }) % (value, state) ->
+  }) % (val, state) ->
     tostring state.value
 
   if: do
@@ -79,13 +81,24 @@ t = (tbl, ...) ->
   }) % (val, state) ->
     "var #{table.concat state.names, ", "}"
   
-  exp: t({
-    "exp"
-    types.any\tag "left"
-    types.string\tag "operator"
-    types.any\tag "right"
-  }) % (val, state) ->
-    Line node(state.left), " #{state.operator} ", node(state.right)
+  exp: do
+    operand = types.scope types.shape({
+      types.string\tag "operator"
+      (types.any / node)\tag "value"
+    }) % (val, state) ->
+      Line " #{state.operator} ", state.value
+
+    operands = types.array_of(operand)\tag "operands"
+
+    split_ntuples(3, 2, "operands") * t({
+      "exp"
+      types.any\tag "left"
+      operands: operands
+    }) % (val, state) ->
+      Line(
+        node state.left
+        unpack state.operands
+      )
   
   -- only support on name, value right now
   assign: t({
