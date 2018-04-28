@@ -155,7 +155,14 @@ x = (one, two, three) ->
 x = function(one, two, three) {
   return one + two + three;
 }]]
+    }
 
+    {
+      [[(-> console.log "what")!]]
+      [[
+(function() {
+  console.log("what");
+})();]]
     }
   }
 

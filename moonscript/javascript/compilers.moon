@@ -147,6 +147,12 @@ t = (tbl, ...) ->
     }) % (val, state) ->
       Line state.root, unpack state.actions or {}
 
+  parens: t({
+    "parens"
+    (types.any / node)\tag "value"
+  }) % (val, state) ->
+    Line "(", state.value, ")"
+
   return: t({
     "return"
     t {
