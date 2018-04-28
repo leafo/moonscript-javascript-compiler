@@ -164,6 +164,10 @@ x = function(one, two, three) {
   console.log("what");
 })();]]
     }
+    {
+      [=[(hello)["world"][a + b][->]]=]
+      [=[(hello)["world"][a + b][function() { }];]=]
+    }
   }
 
   for {input, output} in *examples

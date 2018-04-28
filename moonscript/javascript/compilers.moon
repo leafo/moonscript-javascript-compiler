@@ -136,13 +136,21 @@ t = (tbl, ...) ->
 
     dot_node = dot_node\describe '{ "dot" } node'
 
+    index_node = t({
+      "index"
+      (types.any / node)\tag "field_expression"
+    }) % (val, state) ->
+      Line "[", state.field_expression, "]"
+
+    index_node = index_node\describe '{ "index" } node'
+
     t({
       "chain"
       (types.any / node)\tag "root"
     }, {
       extra_fields: types.map_of(
         types.number
-        types.scope(call_node + dot_node)\tag "actions[]"
+        types.scope(call_node + dot_node + index_node)\tag "actions[]"
       )
     }) % (val, state) ->
       Line state.root, unpack state.actions or {}
