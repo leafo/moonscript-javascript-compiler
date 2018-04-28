@@ -72,9 +72,13 @@ class Line
     args = select "#", ...
     @chunks = {}
     for i=1,args
-      val = select i, ...
-      if val != nil
-        table.insert @chunks, val
+      arg = select i, ...
+      if arg != nil
+        if type(arg) == "table" and arg.__class == Line
+          for chunk in *arg.chunks
+            table.insert @chunks, chunk
+        else
+          table.insert @chunks, arg
 
   render: (indentation=0) =>
     out = for chunk in *@chunks

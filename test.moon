@@ -1,16 +1,9 @@
 
 code = [[
-local friend
-if true
-  x = "yes"
-  if another
-    world
-  elseif "plus"
-    5
-  elseif "bust"
-    5
-  else
-    "no"
+-- one.two.three
+-- one(2, "snake head")
+-- dad.zone.umm(true)\okay
+a b c d e f!
 ]]
 
 parse = require "moonscript.parse"

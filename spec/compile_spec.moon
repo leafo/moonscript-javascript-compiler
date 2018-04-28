@@ -76,11 +76,33 @@ if (one) {
 }]]
     }
 
+    {
+      [[hello "world"]]
+      [[hello("world");]]
+    }
 
+    {
+      [[hello a, b, c, 1, 23,4, another(1)]]
+      [[hello(a, b, c, 1, 23, 4, another(1));]]
+    }
+
+    {
+      [[one(2, "snake head")]]
+      [[one(2, "snake head");]]
+    }
+
+    {
+      [[dad.zone.umm(true).okay]]
+      [[dad.zone.umm(true).okay;]]
+    }
+    {
+      [[a b c d e f!]]
+      [[a(b(c(d(e(f())))));]]
+    }
   }
 
   for {input, output} in *examples
-    it "matches compile", ->
+    it "compiles `#{input\match "^[^\n]+"}`", ->
       parse = require "moonscript.parse"
       tree = assert parse.string input
       b = Block!
