@@ -99,6 +99,34 @@ if (one) {
       [[a b c d e f!]]
       [[a(b(c(d(e(f())))));]]
     }
+
+    {
+      [[one = dad.zone.umm(true).okay!]]
+      [[one = dad.zone.umm(true).okay();]]
+    }
+
+    {
+      [[please = hello.world + zone!]]
+      [[please = hello.world + zone();]]
+    }
+
+    {
+      [[if something.yes then no.way]]
+      [[
+if (something.yes) {
+  no.way;
+}]]
+    }
+
+    {
+      [[if something! then four.times elseif math.floor(5) == 2 then "yeah"]]
+[[
+if (something()) {
+  four.times;
+} else if (math.floor(5) == 2) {
+  "yeah";
+}]]
+    }
   }
 
   for {input, output} in *examples

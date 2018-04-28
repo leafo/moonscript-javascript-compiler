@@ -67,12 +67,10 @@ t = (tbl, ...) ->
 
       if state.elseif
         for child_state in *state.elseif
-          table.insert args,
-            Block(
-              " else if (#{node child_state.cond}) {"
-              "}"
-              child_state.block
-            )
+          table.insert args, " else if ("
+          table.insert args, node child_state.cond
+          table.insert args, ") "
+          table.insert args, Block "{", "}", child_state.block
 
       if state.else
         table.insert args,
@@ -93,7 +91,7 @@ t = (tbl, ...) ->
     types.string\tag "operator"
     types.any\tag "right"
   }) % (val, state) ->
-    "#{node state.left} #{state.operator} #{node state.right}"
+    Line node(state.left), " #{state.operator} ", node(state.right)
   
   -- only support on name, value right now
   assign: t({
@@ -104,9 +102,8 @@ t = (tbl, ...) ->
     types.shape {
       types.any\tag "value"
     }
-
   }) % (val, state) ->
-    "#{node state.name} = #{node state.value}"
+    Line node(state.name), " = ", node state.value
 
   chain: do
     call_node = t({
@@ -142,5 +139,6 @@ t = (tbl, ...) ->
       )
     }) % (val, state) ->
       Line node(state.root), unpack state.actions or {}
+
 
 }
