@@ -173,10 +173,73 @@ x = function(one, two, three) {
       "not thing.zone"
       "!thing.zone;"
     }
+
+    {
+      "{}"
+      "[];"
+    }
+    {
+      [[
+a = {
+  ->
+    console.log "please eat vegetable"
+}]]
+      [[
+a = [function() {
+  console.log("please eat vegetable");
+}];]]
+    }
+
+    {
+      [[
+a = {
+  "one"
+  "two"
+  "trhee"
+  3
+}]]
+      [=[a = ["one", "two", "trhee", 3];]=]
+    }
+
+
+    {
+      [[
+b = {
+  "one"
+  "two"
+  "trhee"
+  "trheefeifefjlwefjkwfklwfjlwkeafklwejf"
+}]]
+      [[
+b = [
+  "one",
+  "two",
+  "trhee",
+  "trheefeifefjlwefjkwfklwfjlwkeafklwejf"
+];]]
+    }
+
+    {
+      [[
+thing {
+  1,2
+  hello "dude"
+  {1,2,3,4}
+}]]
+      [[
+thing([
+  1,
+  2,
+  hello("dude"),
+  [1, 2, 3, 4]
+]);]]
+    }
+
+
   }
 
-  for {input, output} in *examples
-    it "compiles `#{input\match "^[^\n]+"}`", ->
+  for {input, output, :name} in *examples
+    it name or "compiles `#{input\match "^[^\n]+"}`", ->
       parse = require "moonscript.parse"
       tree = assert parse.string input
       b = Block!

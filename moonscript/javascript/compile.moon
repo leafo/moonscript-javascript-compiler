@@ -24,13 +24,21 @@ class Block
   header: ""
   footer: ""
   join: "\n"
+  line_suffix: ";"
+  trailing_suffix: true
 
   new: (@header, @footer, lines) =>
     @lines = {}
 
     if lines
       for line in *lines
-        @append_statement line
+        if type(line) == "string"
+          line = Line line
+
+        if line.__class == Line
+          table.insert @lines, line
+        else
+          @append_statement line
 
   -- compile the node and append it
   append_statement: (statement) =>
@@ -51,17 +59,26 @@ class Block
       return "#{@header} #{@footer}"
 
     prefix = @indentation_char\rep indent
-    suffix = ";"
+    suffix = @line_suffix
 
     out = { }
 
     if @header and @header != ""
       table.insert out, @header
 
-    for line in *@lines
+    num_lines = #@lines
+    for idx, line in ipairs @lines
+      last = num_lines == idx
+
       rendered_line = "#{prefix}#{line\render indent}"
-      unless rendered_line\match "}$"
-        rendered_line ..= suffix
+
+      -- quick hacko
+      if suffix == ";"
+        unless rendered_line\match "}$"
+          rendered_line ..= suffix
+      else
+        unless last and not @trailing_suffix
+          rendered_line ..= suffix
 
       table.insert out, rendered_line
 

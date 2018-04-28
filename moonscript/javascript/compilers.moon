@@ -199,4 +199,41 @@ t = (tbl, ...) ->
     table.insert args, Block "{", "}", state.block
     Line unpack args
 
+  table: do
+    -- sum of length is less than 40
+    simple_values = types.one_of {
+      types.array_of(types.any, length: types.range(0,1)) / true
+      types.array_of(
+        types.string\tag (state, value) ->
+          state.count or= 0
+          state.count += #value
+      ) % (_, state) -> (state.count or 0) < 40
+    }
+
+    array_table = t({
+      "table"
+      types.array_of types.shape {
+        (types.any / node)\tag "values[]"
+      }
+    }) % (val, state) ->
+      state = { values: {} } if state == true
+
+      if simple_values\transform state.values
+        args = { "[" }
+        for idx, v in ipairs state.values
+          unless idx == 1
+            table.insert args, ", "
+
+          table.insert args, v
+
+        table.insert args, "]"
+        Line unpack args
+      else
+        b = Block "[", "]", state.values
+        b.line_suffix = ","
+        b.trailing_suffix = false
+        Line b
+
+    array_table
+
 }
