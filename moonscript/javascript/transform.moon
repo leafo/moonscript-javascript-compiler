@@ -5,6 +5,9 @@ import types from require "tableshape"
 TEN = {"number", 10}
 
 
+match_node = (name) ->
+  types.shape { name }, open: true
+
 to_ref = types.one_of {
   types.string / (name) -> {"ref", name}
   types.shape {"ref"}, open: true
@@ -13,6 +16,27 @@ to_ref = types.one_of {
 t = (tbl, ...) ->
   tbl[-1] = types.number + types.nil
   types.shape tbl, ...
+
+hoist_declares = types.array_of(types.one_of {
+  t({
+    "assign"
+    types.shape {
+      t({
+        "ref"
+        types.string\tag "names[]"
+      })
+    }
+    types.any
+  })
+  types.any
+}) % (val, state) ->
+  if state != true and next state
+    {
+      {"declare", state.names}
+      unpack val
+    }
+  else
+    val
 
 transform_foreach = types.scope t({
   "foreach"
@@ -46,7 +70,7 @@ transform_foreach = types.scope t({
 
 transform_statement = transform_foreach + types.any
 
-tree = types.array_of transform_statement
+tree = types.array_of(transform_statement) * hoist_declares
 
 {:tree}
 

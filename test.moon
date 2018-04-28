@@ -4,7 +4,11 @@
 -- "trhee"
 -- "trheefeifefjlwefjkwfklwfjlwkeafklwejf"
 
+-- this isn't done  yet
+-- a.b = c
+
 code = [[
+hello = "world"
 for item in *items
   print item
 ]]
