@@ -2,11 +2,11 @@
 # MoonScript -> JavaScript
 
 This is a new transformer and compiler for MoonScript that targets JavaScript.
-It is an experiment to test [tablshape]() as a way to rewrite the MoonScript to
-Lua transformer. Using tableshape will make it easier to develop new features
-and generate optimized code at the expense of compiling slower compared to the
-hand written transformer MoonScript currently uses. (Hopefully the performance
-penalty is not significant)
+It is an experiment to test [tableshape](https://github.com/leafo/tableshape)
+as a way to rewrite the MoonScript to Lua transformer. Using tableshape will
+make it easier to develop new features and generate optimized code at the
+expense of compiling slower compared to the hand written transformer MoonScript
+currently uses. (Hopefully the performance penalty is not significant)
 
 In the current MoonScript implementation, the transformer and compiler run at
 the same time. State about the code, like what variables are declared, are
