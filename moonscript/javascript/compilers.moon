@@ -33,6 +33,14 @@ t = (tbl, ...) ->
   }) % (val, state) ->
     Line "-", state.value
 
+  continue: t({
+    types.string\tag "keyword"
+  }) % (val, state) -> state.keyword
+
+  break: t({
+    types.string\tag "keyword"
+  }) % (val, state) -> state.keyword
+
   string: t({
     "string"
     types.string\tag "delim"
@@ -278,5 +286,32 @@ t = (tbl, ...) ->
         Line b
 
     empty_table + array_table + object_table
+
+  for: t({
+    "for"
+    types.string\tag "loop_var"
+    types.shape {
+      (types.any / node)\tag "min"
+      (types.any / node)\tag "max"
+      types.nil + (types.shape {
+        "minus"
+        (types.any / node)\tag "negative_step"
+      }, open: true) + (types.any / node)\tag "step"
+    }
+    types.array_of(types.any / node)\tag "block"
+  }) % (val, state) ->
+    increment = if state.step
+      Line " += ", state.step
+    elseif state.negative_step
+      Line " -= ", state.negative_step
+    else
+      "++"
+
+    Line(
+      "for (var ", state.loop_var, " = ", state.min, "; "
+      state.loop_var, " <= ", state.max, "; "
+      state.loop_var, increment, ") "
+      Block "{", "}", state.block
+    )
 
 }

@@ -267,6 +267,41 @@ thing([
   basecrawl: basecrawl
 };]]
     }
+
+    {
+        [[
+for i=1,one.two
+  console.log("hi")]]
+        [[for (var i = 1; i <= one.two; i++) {
+  console.log("hi");
+}]]
+    }
+    {
+      [[
+for i=1,2,3
+  continue
+  console.log("hi")]]
+      [[
+for (var i = 1; i <= 2; i += 3) {
+  continue;
+  console.log("hi");
+}]]
+    }
+
+    {
+      [[
+for i=1,2,-3
+  if i == 100
+    break
+  console.log("hi")]]
+      [[
+for (var i = 1; i <= 2; i -= 3) {
+  if (i == 100) {
+    break;
+  }
+  console.log("hi");
+}]]
+    }
   }
 
   for {input, output, :name} in *examples
