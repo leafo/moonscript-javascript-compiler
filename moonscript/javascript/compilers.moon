@@ -27,6 +27,12 @@ t = (tbl, ...) ->
   }) % (val, state) ->
     state.name
 
+  minus: t({
+    "minus"
+    (types.any / node)\tag "value"
+  }) % (val, state) ->
+    Line "-", state.value
+
   string: t({
     "string"
     types.string\tag "delim"

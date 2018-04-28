@@ -173,6 +173,10 @@ x = function(one, two, three) {
       "not thing.zone"
       "!thing.zone;"
     }
+    {
+      "-thing.zone"
+      "-thing.zone;"
+    }
 
     {
       "{}"
