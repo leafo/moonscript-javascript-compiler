@@ -1,6 +1,17 @@
 
 import types from require "tableshape"
 
+reserved_words = types.one_of({
+  "case", "catch", "class", "const", "continue", "debugger", "default",
+  "delete", "do", "else", "export", "extends", "finally", "for",
+  "function", "if", "import", "in", "instanceof", "new", "return",
+  "super", "switch", "this", "throw", "try", "typeof", "var", "void",
+  "while", "with", "yield",
+
+  "enum", "implements", "interface", "let", "package", "private", "protected",
+  "public", "static", "await",
+})
+
 -- splits up the remaining numeric fields of a table into groups of size,
 -- stored into rest. See spec/util_spec for examples
 split_ntuples = (start=1, size=1, rest_name="rest") ->
