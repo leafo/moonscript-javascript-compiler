@@ -168,6 +168,11 @@ x = function(one, two, three) {
       [=[(hello)["world"][a + b][->]]=]
       [=[(hello)["world"][a + b][function() { }];]=]
     }
+
+    {
+      "not thing.zone"
+      "!thing.zone;"
+    }
   }
 
   for {input, output} in *examples

@@ -40,6 +40,12 @@ t = (tbl, ...) ->
   }) % (val, state) ->
     tostring state.value
 
+  not: t({
+    "not"
+    (types.any / node)\tag "value"
+  }) % (val, state) ->
+    Line "!", state.value
+
   if: do
     else_node = t({
       "else"
