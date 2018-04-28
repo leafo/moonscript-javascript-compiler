@@ -120,7 +120,7 @@ if (something.yes) {
 
     {
       [[if something! then four.times elseif math.floor(5) == 2 then "yeah"]]
-[[
+      [[
 if (something()) {
   four.times;
 } else if (math.floor(5) == 2) {
@@ -137,6 +137,6 @@ if (something()) {
       for s in *tree
         b\append_statement s
 
-      assert.same b\render!, output
+      assert.same output, b\render!
 
 

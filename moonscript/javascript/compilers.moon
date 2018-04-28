@@ -39,16 +39,22 @@ t = (tbl, ...) ->
     tostring state.value
 
   if: do
-    else_node = types.scope t({
+    else_node = t({
       "else"
       types.table\tag "block"
-    }), tag: "else"
+    }) % (val, state) ->
+      Block " else {", "}", state.block
 
-    else_if_node = types.scope t({
+    else_if_node = t({
       "elseif"
       types.any\tag "cond"
       types.table\tag "block"
-    }), tag: "elseif[]"
+    }) % (val, state) ->
+      Line(
+        " else if ("
+        node state.cond
+        Block ") {", "}", state.block
+      )
 
     t({
       "if"
@@ -56,27 +62,15 @@ t = (tbl, ...) ->
       types.table\tag "block"
     }, extra_fields: types.map_of(
       types.number
-      else_if_node + else_node
+      types.scope(else_if_node + else_node)\tag "elses[]"
     )) % (val, state) ->
-      args = {
+      Line(
         "if ("
         node state.cond
         ") "
         Block "{", "}", state.block
-      }
-
-      if state.elseif
-        for child_state in *state.elseif
-          table.insert args, " else if ("
-          table.insert args, node child_state.cond
-          table.insert args, ") "
-          table.insert args, Block "{", "}", child_state.block
-
-      if state.else
-        table.insert args,
-          Block " else {", "}", state.else.block
-
-      Line unpack args
+        unpack state.elses or {}
+      )
 
   declare_with_shadows: proxy_node "declare"
   declare: t({
