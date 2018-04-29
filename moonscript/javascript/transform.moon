@@ -48,6 +48,13 @@ find_hoistable = types.array_of(types.one_of {
     }
   }
 
+  t {
+    "for"
+    types.string\tag "names[]"
+    types.any
+    find_hoistable_proxy
+  }
+
   types.any
 })
 

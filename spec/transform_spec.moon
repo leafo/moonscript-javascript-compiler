@@ -53,6 +53,18 @@ if (something) {
   z = 10 + 2;
 }]]
     }
+
+    {
+      [[
+for thing in *items
+  print thing]]
+      [[
+var idx, thing;
+for (var idx = 0; idx <= items.length - 1; idx++) {
+  thing = items[idx];
+  print(thing);
+}]]
+    }
   }
 
   for {input, output, :name} in *examples
