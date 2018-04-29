@@ -1,6 +1,6 @@
 
 import types from require "tableshape"
-import Proxy from require "moonscript.javascript.util"
+import Proxy, ArrayLastItemShape from require "moonscript.javascript.util"
 
 -- debug value
 TEN = {"number", 10}
@@ -67,6 +67,38 @@ hoist_declares = find_hoistable % (val, state) ->
   else
     val
 
+
+local implicit_return
+implicit_return_proxy = Proxy -> implicit_return
+implicit_return = ArrayLastItemShape types.one_of {
+  -- things that can't be implicitly returned
+  types.shape {
+    types.one_of {
+      "return", "assign", "declare", "for"
+    }
+  }, open: true
+
+  -- enter bodies of if statements
+  t {
+    "if"
+    types.any
+    implicit_return_proxy
+  }, extra_fields: types.map_of types.number, types.one_of {
+    t {
+      "elseif"
+      types.any -- cond
+      implicit_return_proxy
+    }
+
+    t {
+      "else"
+      implicit_return_proxy
+    }
+  }
+
+  types.any / (val) -> { "return", { "explist", val } }
+}
+
 transform_foreach = types.scope t({
   "foreach"
   types.array_of(types.string * to_ref)\tag "loop_vars"
@@ -99,7 +131,7 @@ transform_foreach = types.scope t({
 
 transform_statement = transform_foreach + types.any
 
-tree = types.array_of(transform_statement) * hoist_declares
+tree = types.array_of(transform_statement) * implicit_return * hoist_declares
 
 {:tree}
 

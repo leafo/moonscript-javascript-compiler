@@ -65,6 +65,29 @@ for (var idx = 0; idx <= items.length - 1; idx++) {
   print(thing);
 }]]
     }
+
+    {
+      [[one two
+three four]]
+      [[one(two);
+return three(four);]]
+    }
+
+    {
+      [[if one
+  10
+elseif true
+  "yes"
+else
+  20]]
+      [[if (one) {
+  return 10;
+} else if (true) {
+  return "yes";
+} else {
+  return 20;
+}]]
+    }
   }
 
   for {input, output, :name} in *examples
