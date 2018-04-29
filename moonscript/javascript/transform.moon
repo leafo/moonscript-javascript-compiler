@@ -18,7 +18,7 @@ t = (tbl, ...) ->
   types.shape tbl, ...
 
 local find_hoistable
-find_hoistable_proxy = Proxy -> find_hoistable
+find_hoistable_proxy = Proxy(-> find_hoistable)\describe "find_hoistable"
 find_hoistable = types.array_of(types.one_of {
   t {
     "assign"
@@ -69,7 +69,7 @@ hoist_declares = find_hoistable % (val, state) ->
 
 
 local implicit_return
-implicit_return_proxy = Proxy -> implicit_return
+implicit_return_proxy = Proxy(-> implicit_return)\describe "implicit_return"
 implicit_return = ArrayLastItemShape types.one_of {
   -- things that can't be implicitly returned
   types.shape {
@@ -131,7 +131,135 @@ transform_foreach = types.scope t({
 
 transform_statement = transform_foreach + types.any
 
-tree = types.array_of(transform_statement) * implicit_return * hoist_declares
+local statement_values
+statement_values_proxy = Proxy(-> statement_values)\describe "statement_values"
+
+local chain_values
+chain_values_proxy = Proxy(-> chain_values)\describe "chain_values"
+
+local table_values
+table_values_proxy = Proxy(-> table_values)\describe "table_values"
+
+local transform_value
+transform_value_proxy = Proxy(-> transform_value)\describe "transform_value"
+
+transform_value = (types.one_of {
+  chain_values_proxy
+  table_values_proxy
+
+  t {
+    types.one_of { "parens", "not", "minus" }
+    transform_value_proxy
+  }
+
+  t {
+    "exp"
+  }, extra_fields: types.map_of types.number, types.string + transform_value_proxy
+
+  t {
+    "fndef"
+    types.any -- args TODO: default values?
+    types.any -- whitelist
+    types.string -- type
+    types.array_of(statement_values_proxy)
+  }
+
+  types.any
+}) / (value) ->
+  print "got value:"
+  require("moon").p value
+  print ""
+
+  value
+
+chain_values = t {
+  "chain"
+  transform_value -- root
+}, extra_fields: types.map_of(
+  types.number
+  types.one_of {
+    types.shape {"index", transform_value}
+    types.shape {"call", types.array_of(transform_value)}
+    types.any
+  }
+)
+
+assign_values = t {
+  "assign"
+  types.any -- names
+  types.array_of(transform_value)
+}
+
+table_values = t {
+  "table"
+  types.array_of types.one_of {
+    -- array items
+    types.array_of transform_value, length: types.literal(1)
+
+    -- object items
+    types.shape {
+      types.one_of {
+        types.shape { "key_literal" }, open: true
+        transform_value
+      }
+      transform_value
+    }
+  }
+}
+
+if_values = t {
+  "if"
+  transform_value
+  types.array_of(statement_values_proxy)
+}, extra_fields: types.map_of types.number, types.one_of {
+  t {
+    "elseif"
+    transform_value
+    types.array_of(statement_values_proxy)
+  }
+
+  t {
+    "else"
+    types.array_of(statement_values_proxy)
+  }
+}
+
+for_values = t {
+  "for"
+  types.any -- loop variable
+  types.shape {
+    transform_value
+    transform_value
+    types.nil + transform_value
+  }
+  types.array_of(statement_values_proxy)
+}
+
+-- a value that can appear as a statement
+statement_values = types.one_of {
+  chain_values
+  assign_values
+  table_values
+  if_values
+  for_values
+
+  t {
+    "return"
+    types.shape {
+      "explist"
+    }, extra_fields: types.map_of(types.number, transform_value)
+  }
+
+  types.shape({
+    types.one_of {
+      "ref", "not", "parens", "minus", "string", "number", "fndef"
+    }
+  }, open: true) * transform_value
+
+  types.any
+}
+
+tree = types.array_of(transform_statement) * types.array_of(statement_values) * implicit_return * hoist_declares
 
 {:tree}
 

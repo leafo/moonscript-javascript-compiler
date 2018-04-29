@@ -5,8 +5,10 @@ import Line, Block, node from require "moonscript.javascript.compile"
 import split_ntuples, Proxy from require "moonscript.javascript.util"
 
 proxy_node = (name) ->
-  Proxy ->
+  p = Proxy ->
     require("moonscript.javascript.compilers")[name]
+  p\describe name
+  p
 
 match_node = (name) ->
   types.shape { name }, open: true

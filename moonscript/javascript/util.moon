@@ -2,7 +2,7 @@
 import types, BaseType, FailedTransform from require "tableshape"
 
 class Proxy extends BaseType
-  new: (@fn) =>
+  new: (@fn, @opts) =>
 
   _transform: (...) =>
     assert(@.fn!, "proxy missing transformer")\_transform ...
