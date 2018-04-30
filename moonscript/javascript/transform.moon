@@ -64,7 +64,7 @@ find_hoistable = types.array_of types.one_of {
 }
 
 hoist_declares = types.scope find_hoistable % (val, state) ->
-  if state != true and next state
+  if state
     {
       {"declare", state.names}
       unpack val
