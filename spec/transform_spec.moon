@@ -73,19 +73,71 @@ three four]]
 return three(four);]]
     }
 
-    {
-      [[if one
+      {
+        [[
+if one
   10
 elseif true
   "yes"
 else
   20]]
-      [[if (one) {
+        [[
+if (one) {
   return 10;
 } else if (true) {
   return "yes";
 } else {
   return 20;
+}]]
+      }
+
+    {
+      [[m = "tw"
+x = ->
+  g = 100
+  if something
+    k = "nine"
+    "yes"
+  else
+    f = 232
+    "no"]]
+      [[
+var m, x;
+m = "tw";
+x = function() {
+  var g, k, f;
+  g = 100;
+  if (something) {
+    k = "nine";
+    return "yes";
+  } else {
+    f = 232;
+    return "no";
+  }
+}]]
+    }
+    {
+      [[
+m = "tw"
+x = ->
+  g = 100
+  if something
+    "yes"
+  else
+    f = 232
+    "no"]]
+      [[
+var m, x;
+m = "tw";
+x = function() {
+  var g, f;
+  g = 100;
+  if (something) {
+    return "yes";
+  } else {
+    f = 232;
+    return "no";
+  }
 }]]
     }
   }

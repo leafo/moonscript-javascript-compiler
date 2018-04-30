@@ -5,6 +5,11 @@ import Proxy, ArrayLastItemShape from require "moonscript.javascript.util"
 -- debug value
 TEN = {"number", 10}
 
+debug = (str, node) ->
+  node % (val, state) ->
+    print str, require("moon").dump state
+    val
+
 match_node = (name) ->
   types.shape { name }, open: true
 
@@ -19,7 +24,7 @@ t = (tbl, ...) ->
 
 local find_hoistable
 find_hoistable_proxy = Proxy(-> find_hoistable)\describe "find_hoistable"
-find_hoistable = types.array_of(types.one_of {
+find_hoistable = types.array_of types.one_of {
   t {
     "assign"
     types.shape {
@@ -56,9 +61,9 @@ find_hoistable = types.array_of(types.one_of {
   }
 
   types.any
-})
+}
 
-hoist_declares = find_hoistable % (val, state) ->
+hoist_declares = types.scope find_hoistable % (val, state) ->
   if state != true and next state
     {
       {"declare", state.names}
@@ -143,6 +148,14 @@ table_values_proxy = Proxy(-> table_values)\describe "table_values"
 local transform_value
 transform_value_proxy = Proxy(-> transform_value)\describe "transform_value"
 
+transform_fndef = t {
+  "fndef"
+  types.any -- args TODO: default values?
+  types.any -- whitelist
+  types.string -- type
+  types.array_of(statement_values_proxy) * implicit_return * hoist_declares
+}
+
 transform_value = (types.one_of {
   chain_values_proxy
   table_values_proxy
@@ -156,19 +169,14 @@ transform_value = (types.one_of {
     "exp"
   }, extra_fields: types.map_of types.number, types.string + transform_value_proxy
 
-  t {
-    "fndef"
-    types.any -- args TODO: default values?
-    types.any -- whitelist
-    types.string -- type
-    types.array_of(statement_values_proxy)
-  }
+  transform_fndef
+
 
   types.any
 }) / (value) ->
-  print "got value:"
-  require("moon").p value
-  print ""
+  -- print "got value:"
+  -- require("moon").p value
+  -- print ""
 
   value
 
