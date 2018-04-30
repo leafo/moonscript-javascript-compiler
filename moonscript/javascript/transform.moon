@@ -2,6 +2,11 @@
 import types from require "tableshape"
 import Proxy, ArrayLastItemShape from require "moonscript.javascript.util"
 
+-- an inherited scope
+class Scope extends types.scope
+  create_scope_state: (existing) =>
+    setmetatable {}, __index: existing
+
 -- debug value
 TEN = {"number", 10}
 
@@ -63,10 +68,20 @@ find_hoistable = types.array_of types.one_of {
   types.any
 }
 
-hoist_declares = types.scope find_hoistable % (val, state) ->
-  if state
+hoist_declares = Scope find_hoistable % (val, state) ->
+  if state and state.names
+    already_declared = if state.declared_names
+      {name, true for name in *state.declared_names}
+
+    names = for name in *state.names
+      continue if already_declared and already_declared[name]
+      name
+
+    unless next names
+      return val
+
     {
-      {"declare", state.names}
+      {"declare", names}
       unpack val
     }
   else
@@ -150,7 +165,12 @@ transform_value_proxy = Proxy(-> transform_value)\describe "transform_value"
 
 transform_fndef = t {
   "fndef"
-  types.any -- args TODO: default values?
+
+  -- args
+  types.array_of types.shape {
+    types.string\tag "declared_names[]"
+  }
+
   types.any -- whitelist
   types.string -- type
   types.array_of(statement_values_proxy) * implicit_return * hoist_declares

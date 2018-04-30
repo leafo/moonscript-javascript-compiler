@@ -140,6 +140,19 @@ x = function() {
   }
 }]]
     }
+
+    {
+      [[
+f = (a,b) ->
+  b = "no"
+  a]]
+    [[
+var f;
+f = function(a, b) {
+  b = "no";
+  return a;
+}]]
+    }
   }
 
   for {input, output, :name} in *examples
