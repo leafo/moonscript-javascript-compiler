@@ -59,9 +59,9 @@ if (something) {
 for thing in *items
   print thing]]
       [[
-var idx, thing;
-for (var idx = 0; idx <= items.length - 1; idx++) {
-  thing = items[idx];
+var _i, thing;
+for (_i = 0; _i <= items.length - 1; _i++) {
+  thing = items[_i];
   print(thing);
 }]]
     }

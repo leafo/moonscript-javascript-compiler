@@ -23,6 +23,17 @@ to_ref = types.one_of {
   types.shape {"ref"}, open: true
 }
 
+unused_name = (prefix, state) ->
+  declared_names = if state and state.declared_names
+    {name, true for name in *state.declared_names}
+
+  name = "_#{prefix}"
+  k = 1
+  while declared_names and declared_names[name]
+    name = "_#{prefix}_#{k}"
+
+  name
+
 one_of_state = (field) ->
   types.custom (val, state) ->
     if list = state and state[field]
@@ -51,7 +62,7 @@ t = (tbl, ...) ->
           node_type_pattern
 
       node_dump = require("moonscript.dump").tree { node }
-      node_dump = require("moon").dump node
+      -- node_dump = require("moon").dump node
       error "Failed to get t(#{expecting_type}), got:\n#{node_dump}"
 
     before_check * (shape + types.any / fail)
@@ -153,6 +164,9 @@ implicit_return = ArrayLastItemShape types.one_of {
   types.any / (val) -> { "return", { "explist", val } }
 }
 
+local transform_statement
+transform_statement_proxy = Proxy(-> transform_statement)\describe "transform_statement"
+
 transform_foreach = Scope t({
   "foreach"
   types.array_of(types.string * to_ref)\tag "loop_vars"
@@ -162,15 +176,18 @@ transform_foreach = Scope t({
       types.any\tag "list_expression"
     }
   }
-  types.array_of(types.any)\tag "block"
+  types.any\tag "block"
 }) % (value, state) ->
+  index_name = unused_name("i", state)
+
   item_var = unpack state.loop_vars
   length = {"chain", state.list_expression, {"dot", "length"}}
-  item_val = {"chain", state.list_expression, {"index", {"ref", "idx"}}}
+  item_val = {"chain", state.list_expression, {"index", {"ref", index_name}}}
 
+  -- TODO: extract length calculation into comma exp done beforehand
   {
     "for"
-    "idx"
+    index_name
     {
       {"number", 0}
       {"exp", length, "-", {"number", "1"}}
@@ -182,10 +199,19 @@ transform_foreach = Scope t({
     [-1]: value[-1]
   }
 
+transform_foreach *= transform_statement_proxy
 
 transform_statement = types.one_of {
   transform_foreach
 
+  t {
+    "for"
+    types.any
+    types.any
+    types.array_of(transform_statement_proxy)
+  }
+
+  -- conert the node to plain declare
   t({
     "declare_with_shadows"
     types.any
@@ -316,14 +342,19 @@ statement_values = types.one_of {
 
   t {
     "declare"
-    types.array_of(types.string\tag "declared_names[]")
+    types.array_of(
+      one_of_state("declared_names") + types.string\tag "declared_names[]"
+    )
   }
 
   t {
     "return"
-    types.shape {
-      "explist"
-    }, extra_fields: types.map_of(types.number, transform_value)
+    types.one_of {
+      ""
+      types.shape {
+        "explist"
+      }, extra_fields: types.map_of(types.number, transform_value)
+    }
   }
 
   types.shape({
