@@ -23,22 +23,44 @@ to_ref = types.one_of {
   types.shape {"ref"}, open: true
 }
 
+one_of_state = (field) ->
+  types.custom (val, state) ->
+    if list = state and state[field]
+      for item in *list
+        if val == item
+          return true
+
+    nil, "not in state"
+
 t = (tbl, ...) ->
   tbl[-1] = types.number + types.nil
   types.shape tbl, ...
 
 local find_hoistable
 find_hoistable_proxy = Proxy(-> find_hoistable)\describe "find_hoistable"
+
+-- prevents grabbing names already pulled or declared
+record_name = types.one_of {
+  one_of_state "declared_names"
+  one_of_state "names"
+  types.string\tag "names[]"
+}
+
 find_hoistable = types.array_of types.one_of {
   t {
     "assign"
     types.shape {
       t {
         "ref"
-        types.string\tag "names[]"
+        record_name
       }
     }
     types.any
+  }
+
+  t {
+    "declare"
+    types.array_of(types.string\tag "declared_names[]")
   }
 
   t {
@@ -60,7 +82,7 @@ find_hoistable = types.array_of types.one_of {
 
   t {
     "for"
-    types.string\tag "names[]"
+    record_name
     types.any
     find_hoistable_proxy
   }
@@ -70,18 +92,8 @@ find_hoistable = types.array_of types.one_of {
 
 hoist_declares = Scope find_hoistable % (val, state) ->
   if state and state.names
-    already_declared = if state.declared_names
-      {name, true for name in *state.declared_names}
-
-    names = for name in *state.names
-      continue if already_declared and already_declared[name]
-      name
-
-    unless next names
-      return val
-
     {
-      {"declare", names}
+      {"declare", state.names}
       unpack val
     }
   else
@@ -151,6 +163,13 @@ transform_foreach = Scope t({
 
 transform_statement = types.one_of {
   transform_foreach
+
+  t({
+    "declare_with_shadows"
+    types.any
+  }) / (v) ->
+    {"declare", v[2], [-1]: v[-1]}
+
   types.any
 }
 

@@ -191,6 +191,21 @@ f = function(b) {
 }]]
     }
 
+    {
+      [[
+f = "test"
+local f
+local m
+f = "please"
+m = "hi"]]
+      [[
+var f;
+f = "test";
+var f;
+var m;
+f = "please";
+m = "hi";]]
+    }
   }
 
   for {input, output, :name} in *examples
