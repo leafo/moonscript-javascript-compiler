@@ -61,7 +61,9 @@ record_name = types.one_of {
   types.string\tag "names[]"
 }
 
-find_hoistable = types.array_of types.one_of {
+find_hoistable_statements = types.array_of(find_hoistable_proxy)
+
+find_hoistable = types.one_of {
   t {
     "assign"
     types.shape {
@@ -94,17 +96,17 @@ find_hoistable = types.array_of types.one_of {
   t {
     "if"
     types.any
-    find_hoistable_proxy
+    find_hoistable_statements
   }, extra_fields: types.map_of types.number, types.one_of {
     t {
       "elseif"
       types.any -- cond
-      find_hoistable_proxy
+      find_hoistable_statements
     }
 
     t {
       "else"
-      find_hoistable_proxy
+      find_hoistable_statements
     }
   }
 
@@ -112,15 +114,14 @@ find_hoistable = types.array_of types.one_of {
     "for"
     record_name
     types.any
-    find_hoistable_proxy
+    find_hoistable_statements
   }
 
   t {
     "while"
     types.any
-    find_hoistable_proxy
+    find_hoistable_statements
   }
-
 
   types.any
 }
@@ -133,7 +134,7 @@ existing_declare = types.shape {
   })
 }, open: true
 
-hoist_declares = Scope find_hoistable % (val, state) ->
+hoist_declares = Scope types.array_of(find_hoistable) % (val, state) ->
   if state and state.names
     ed = existing_declare(val)
 
