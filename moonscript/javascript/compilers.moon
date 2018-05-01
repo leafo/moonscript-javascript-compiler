@@ -311,7 +311,7 @@ t = (tbl, ...) ->
       "++"
 
     Line(
-      "for (var ", state.loop_var, " = ", state.min, "; "
+      "for (", state.loop_var, " = ", state.min, "; "
       state.loop_var, " <= ", state.max, "; "
       state.loop_var, increment, ") "
       Block "{", "}", state.block
