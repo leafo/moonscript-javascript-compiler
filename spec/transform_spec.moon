@@ -233,7 +233,19 @@ f = function() {
     }
   }
 }]]
+    }
 
+    {
+      [[
+while a > 5
+  k = 100
+  console.log "got it!"]]
+      [[
+var k;
+while (a > 5) {
+  k = 100;
+  console.log("got it!");
+}]]
     }
   }
 

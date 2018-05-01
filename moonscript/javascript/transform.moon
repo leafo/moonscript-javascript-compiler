@@ -115,6 +115,13 @@ find_hoistable = types.array_of types.one_of {
     find_hoistable_proxy
   }
 
+  t {
+    "while"
+    types.any
+    find_hoistable_proxy
+  }
+
+
   types.any
 }
 
@@ -149,7 +156,7 @@ implicit_return = ArrayLastItemShape types.one_of {
   -- things that can't be implicitly returned
   types.shape {
     types.one_of {
-      "return", "assign", "declare", "for", "foreach"
+      "return", "assign", "declare", "for", "foreach", "while"
     }
   }, open: true
 
