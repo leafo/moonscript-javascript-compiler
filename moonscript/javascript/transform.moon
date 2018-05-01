@@ -306,6 +306,24 @@ transform_value = types.one_of {
   transform_table
   transform_fndef
 
+  types.all_of {
+    t({
+      "if"
+    }, open: true) % (node) ->
+      fn = {"fndef", {}, {}, "slim", {
+        node
+      }}
+
+      {
+        [-1]: node[-1]
+        "chain"
+        {"parens", fn}
+        {"call", {}}
+      }
+
+    transform_value_proxy
+  }
+
   t {
     types.one_of { "parens", "not", "minus" }
     transform_value_proxy

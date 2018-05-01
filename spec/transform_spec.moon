@@ -247,6 +247,21 @@ while (a > 5) {
   console.log("got it!");
 }]]
     }
+
+    {
+      [[
+print if something
+  k = 100
+  "world"]]
+      [[
+return print((function() {
+  var k;
+  if (something) {
+    k = 100;
+    return "world";
+  }
+})());]]
+    }
   }
 
   for {input, output, :name} in *examples
