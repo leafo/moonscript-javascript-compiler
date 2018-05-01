@@ -32,9 +32,31 @@ one_of_state = (field) ->
 
     nil, "not in state"
 
+STRICT = true
 t = (tbl, ...) ->
   tbl[-1] = types.number + types.nil
-  types.shape tbl, ...
+  shape = types.shape tbl, ...
+
+  if STRICT
+    node_type_pattern = assert tbl[1], "missing node type pattern for t()"
+    before_check = types.shape {
+      node_type_pattern
+    }, open: true
+
+    fail = (node) ->
+      expecting_type = switch type(node_type_pattern)
+        when "table"
+          node_type_pattern\_describe!
+        when "string"
+          node_type_pattern
+
+      node_dump = require("moonscript.dump").tree { node }
+      node_dump = require("moon").dump node
+      error "Failed to get t(#{expecting_type}), got:\n#{node_dump}"
+
+    before_check * (shape + types.any / fail)
+  else
+    shape
 
 local find_hoistable
 find_hoistable_proxy = Proxy(-> find_hoistable)\describe "find_hoistable"
