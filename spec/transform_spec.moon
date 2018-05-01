@@ -1,7 +1,7 @@
 
 import Block from require "moonscript.javascript.compile"
 
-describe "moonscript.javascript.compile", ->
+describe "moonscript.javascript.transform", ->
   examples = {
     {
       "hello = 'world'"
