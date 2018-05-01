@@ -2,7 +2,7 @@
 import types from require "tableshape"
 import Line, Block, node from require "moonscript.javascript.compile"
 
-import split_ntuples, Proxy from require "moonscript.javascript.util"
+import split_ntuples, Proxy, t from require "moonscript.javascript.util"
 
 proxy_node = (name) ->
   p = Proxy ->
@@ -12,10 +12,6 @@ proxy_node = (name) ->
 
 match_node = (name) ->
   types.shape { name }, open: true
-
-t = (tbl, ...) ->
-  tbl[-1] = types.number + types.nil
-  types.shape tbl, ...
 
 {
   ref: t({
