@@ -69,8 +69,14 @@ t = (tbl, ...) ->
   else
     shape
 
-local find_hoistable
+
+local *
+
+transform_statement_proxy = Proxy(-> transform_statement)\describe "transform_statement"
+transform_value_proxy = Proxy(-> transform_value)\describe "transform_value"
+
 find_hoistable_proxy = Proxy(-> find_hoistable)\describe "find_hoistable"
+implicit_return_proxy = Proxy(-> implicit_return)\describe "implicit_return"
 
 -- prevents grabbing names already pulled or declared
 record_name = types.one_of {
@@ -92,7 +98,10 @@ find_hoistable = types.array_of types.one_of {
   }
 
   t {
-    "declare"
+    types.one_of {
+      "declare"
+      "declare_with_shadows"
+    }
     types.array_of(types.string\tag "declared_names[]")
   }
 
@@ -123,23 +132,38 @@ find_hoistable = types.array_of types.one_of {
   types.any
 }
 
+-- get the names already declared at the top of the block
+existing_declare = types.shape {
+  t({
+    "declare"
+    types.array_of(types.string\tag "names[]")
+  })
+}, open: true
+
 hoist_declares = Scope find_hoistable % (val, state) ->
   if state and state.names
+    ed = existing_declare(val)
+
+    k, names = if ed
+      for name in *state.names
+        table.insert ed.names, name
+
+      2, ed.names
+    else
+      1, state.names
+
     {
-      {"declare", state.names}
-      unpack val
+      {"declare", names}
+      unpack val, k
     }
   else
     val
 
-
-local implicit_return
-implicit_return_proxy = Proxy(-> implicit_return)\describe "implicit_return"
 implicit_return = ArrayLastItemShape types.one_of {
   -- things that can't be implicitly returned
   types.shape {
     types.one_of {
-      "return", "assign", "declare", "for"
+      "return", "assign", "declare", "for", "foreach"
     }
   }, open: true
 
@@ -164,8 +188,6 @@ implicit_return = ArrayLastItemShape types.one_of {
   types.any / (val) -> { "return", { "explist", val } }
 }
 
-local transform_statement
-transform_statement_proxy = Proxy(-> transform_statement)\describe "transform_statement"
 
 transform_foreach = Scope t({
   "foreach"
@@ -199,39 +221,68 @@ transform_foreach = Scope t({
     [-1]: value[-1]
   }
 
-transform_foreach *= transform_statement_proxy
+transform_for = t {
+  "for"
+  types.any -- loop variable
+  types.shape {
+    transform_value_proxy
+    transform_value_proxy
+    types.nil + transform_value_proxy
+  }
+  types.array_of(transform_statement_proxy)
+}
 
-transform_statement = types.one_of {
-  transform_foreach
+transform_chain = t {
+  "chain"
+  transform_value_proxy -- root
+}, extra_fields: types.map_of(
+  types.number
+  types.one_of {
+    types.shape {"index", transform_value_proxy}
+    types.shape {"call", types.array_of(transform_value_proxy)}
+    types.any
+  }
+)
 
+transform_assign = t {
+  "assign"
+  types.any -- names
+  types.array_of(transform_value_proxy)
+}
+
+transform_table = t {
+  "table"
+  types.array_of types.one_of {
+    -- array items
+    types.array_of transform_value_proxy, length: types.literal(1)
+
+    -- object items
+    types.shape {
+      types.one_of {
+        types.shape { "key_literal" }, open: true
+        transform_value_proxy
+      }
+      transform_value_proxy
+    }
+  }
+}
+
+transform_if = t {
+  "if"
+  transform_value_proxy
+  types.array_of(transform_statement_proxy)
+}, extra_fields: types.map_of types.number, types.one_of {
   t {
-    "for"
-    types.any
-    types.any
+    "elseif"
+    transform_value_proxy
     types.array_of(transform_statement_proxy)
   }
 
-  -- conert the node to plain declare
-  t({
-    "declare_with_shadows"
-    types.any
-  }) / (v) ->
-    {"declare", v[2], [-1]: v[-1]}
-
-  types.any
+  t {
+    "else"
+    types.array_of(transform_statement_proxy)
+  }
 }
-
-local statement_values
-statement_values_proxy = Proxy(-> statement_values)\describe "statement_values"
-
-local chain_values
-chain_values_proxy = Proxy(-> chain_values)\describe "chain_values"
-
-local table_values
-table_values_proxy = Proxy(-> table_values)\describe "table_values"
-
-local transform_value
-transform_value_proxy = Proxy(-> transform_value)\describe "transform_value"
 
 transform_fndef = Scope t {
   "fndef"
@@ -243,12 +294,29 @@ transform_fndef = Scope t {
 
   types.any -- whitelist
   types.string -- type
-  hoist_declares * types.array_of(statement_values_proxy) * implicit_return
+  implicit_return * hoist_declares * types.array_of(transform_statement_proxy)
 }
 
-transform_value = (types.one_of {
-  chain_values_proxy
-  table_values_proxy
+transform_return = t {
+  "return"
+  types.one_of {
+    ""
+    types.shape {
+      "explist"
+    }, extra_fields: types.map_of types.number, transform_value_proxy
+  }
+}
+
+-- convert to declare
+transform_declare_with_shadows = t({
+  "declare_with_shadows"
+  types.any
+}) / (v) -> {"declare", v[2], [-1]: v[-1]}
+
+transform_value = types.one_of {
+  transform_chain
+  transform_table
+  transform_fndef
 
   t {
     types.one_of { "parens", "not", "minus" }
@@ -259,86 +327,15 @@ transform_value = (types.one_of {
     "exp"
   }, extra_fields: types.map_of types.number, types.string + transform_value_proxy
 
-  transform_fndef
-
   types.any
-}) / (value) ->
-  -- print "got value:"
-  -- require("moon").p value
-  -- print ""
-
-  value
-
-chain_values = t {
-  "chain"
-  transform_value -- root
-}, extra_fields: types.map_of(
-  types.number
-  types.one_of {
-    types.shape {"index", transform_value}
-    types.shape {"call", types.array_of(transform_value)}
-    types.any
-  }
-)
-
-assign_values = t {
-  "assign"
-  types.any -- names
-  types.array_of(transform_value)
 }
 
-table_values = t {
-  "table"
-  types.array_of types.one_of {
-    -- array items
-    types.array_of transform_value, length: types.literal(1)
-
-    -- object items
-    types.shape {
-      types.one_of {
-        types.shape { "key_literal" }, open: true
-        transform_value
-      }
-      transform_value
-    }
-  }
-}
-
-if_values = t {
-  "if"
-  transform_value
-  types.array_of(statement_values_proxy)
-}, extra_fields: types.map_of types.number, types.one_of {
-  t {
-    "elseif"
-    transform_value
-    types.array_of(statement_values_proxy)
-  }
-
-  t {
-    "else"
-    types.array_of(statement_values_proxy)
-  }
-}
-
-for_values = t {
-  "for"
-  types.any -- loop variable
-  types.shape {
-    transform_value
-    transform_value
-    types.nil + transform_value
-  }
-  types.array_of(statement_values_proxy)
-}
-
--- a value that can appear as a statement
-statement_values = types.one_of {
-  chain_values
-  assign_values
-  table_values
-  if_values
-  for_values
+transform_statement = types.one_of {
+  transform_foreach * transform_statement_proxy
+  transform_for
+  transform_assign
+  transform_if
+  transform_return
 
   t {
     "declare"
@@ -347,26 +344,20 @@ statement_values = types.one_of {
     )
   }
 
-  t {
-    "return"
-    types.one_of {
-      ""
-      types.shape {
-        "explist"
-      }, extra_fields: types.map_of(types.number, transform_value)
-    }
-  }
-
   types.shape({
     types.one_of {
-      "ref", "not", "parens", "minus", "string", "number", "fndef"
+      "ref", "not", "parens", "minus", "string", "number", "fndef", "table",
+      "chain"
     }
   }, open: true) * transform_value
+
+  -- convert the node to plain declare
+  transform_declare_with_shadows * transform_statement_proxy
 
   types.any
 }
 
-tree = types.array_of(transform_statement) * hoist_declares * types.array_of(statement_values) * implicit_return
+tree = implicit_return * hoist_declares * types.array_of(transform_statement) * hoist_declares
 
 {:tree}
 
