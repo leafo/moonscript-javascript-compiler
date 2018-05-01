@@ -289,6 +289,16 @@ match_node = (name) ->
 
     empty_table + array_table + object_table
 
+  while: t({
+    "while"
+    (types.any / node)\tag "cond"
+    types.array_of(types.any / node)\tag "block"
+  }) % (val, state) ->
+    Line(
+      "while (", state.cond, ") "
+      Block "{", "}", state.block
+    )
+
   for: t({
     "for"
     types.string\tag "loop_var"

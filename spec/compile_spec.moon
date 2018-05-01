@@ -302,6 +302,18 @@ for (i = 1; i <= 2; i -= 3) {
   console.log("hi");
 }]]
     }
+    {
+      [[
+  while 1
+    continue
+    "yes"]]
+      [[
+while (1) {
+  continue;
+  "yes";
+}]]
+    }
+
   }
 
   for {input, output, :name} in *examples
