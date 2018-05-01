@@ -245,12 +245,14 @@ match_node = (name) ->
     }) % (value, scope) ->
       Line scope.key, ": ", scope.value
 
-    empty_table = t({
+    empty_table = types.shape({
+      [-1]: types.number + types.nil
       "table"
       types.equivalent({})\describe "empty table"
     }) % -> "{}"
 
-    object_table = t({
+    object_table = types.shape({
+      [-1]: types.number + types.nil
       "table"
       types.array_of object_tuple\tag "fields[]"
     }) % (value, state) ->
@@ -259,7 +261,8 @@ match_node = (name) ->
       b.trailing_suffix = false
       Line b
 
-    array_table = t({
+    array_table = types.shape({
+      [-1]: types.number + types.nil
       "table"
       types.array_of(
         -- we use array of here to prevent eagerly trying mismatched table
