@@ -254,11 +254,36 @@ print if something
   k = 100
   "world"]]
       [[
+var k;
 return print((function() {
-  var k;
   if (something) {
     k = 100;
     return "world";
+  }
+})());]]
+    }
+
+    {
+      [[
+m = {
+  world: if something
+    f = "good"
+}
+
+print if something
+  k = 100]]
+      [[
+var m, f, k;
+m = {
+  world: (function() {
+    if (something) {
+      f = "good";
+    }
+  })()
+};
+return print((function() {
+  if (something) {
+    k = 100;
   }
 })());]]
     }

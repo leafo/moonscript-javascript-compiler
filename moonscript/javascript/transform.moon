@@ -72,7 +72,7 @@ find_hoistable = types.one_of {
         record_name
       }
     }
-    types.any
+    types.array_of(find_hoistable_proxy)
   }
 
   -- declares can be removed
@@ -95,12 +95,12 @@ find_hoistable = types.one_of {
 
   t {
     "if"
-    types.any
+    find_hoistable_proxy -- cond
     find_hoistable_statements
   }, extra_fields: types.map_of types.number, types.one_of {
     t {
       "elseif"
-      types.any -- cond
+      find_hoistable_proxy -- cond
       find_hoistable_statements
     }
 
@@ -113,14 +113,59 @@ find_hoistable = types.one_of {
   t {
     "for"
     record_name
-    types.any
+    types.shape {
+      find_hoistable_proxy
+      find_hoistable_proxy
+      types.nil + find_hoistable_proxy
+    }
     find_hoistable_statements
   }
 
   t {
     "while"
-    types.any
+    find_hoistable_proxy -- cond
     find_hoistable_statements
+  }
+
+  t {
+    "chain"
+    find_hoistable_proxy
+  }, extra_fields: types.map_of(
+    types.number
+    types.one_of {
+      types.shape {"index", find_hoistable_proxy}
+      types.shape {"call", types.array_of(find_hoistable_proxy)}
+      types.any
+    }
+  )
+
+  t {
+    "return"
+    types.literal("") + types.shape { "explist" }, {
+      extra_fields: types.map_of(
+        types.number
+        find_hoistable_proxy
+      )
+    }
+  }
+
+  -- TODO: this is duplicated on transform_table
+  t {
+    "table"
+    types.array_of types.one_of {
+      -- array items
+      types.array_of find_hoistable_proxy, length: types.literal(1)
+
+      -- object items
+      types.shape {
+        types.one_of {
+          types.shape { "key_literal" }, open: true
+          find_hoistable_proxy
+        }
+        find_hoistable_proxy
+      }
+
+    }
   }
 
   types.any
@@ -245,6 +290,7 @@ transform_assign = t {
   types.array_of(transform_value_proxy)
 }
 
+-- TODO: refactor this into visitor constructors to avoid duplication
 transform_table = t {
   "table"
   types.array_of types.one_of {
