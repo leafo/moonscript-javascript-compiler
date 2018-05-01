@@ -119,7 +119,7 @@ implicit_return = ArrayLastItemShape types.one_of {
   types.any / (val) -> { "return", { "explist", val } }
 }
 
-transform_foreach = types.scope t({
+transform_foreach = Scope t({
   "foreach"
   types.array_of(types.string * to_ref)\tag "loop_vars"
   types.shape {
@@ -149,7 +149,10 @@ transform_foreach = types.scope t({
   }
 
 
-transform_statement = transform_foreach + types.any
+transform_statement = types.one_of {
+  transform_foreach
+  types.any
+}
 
 local statement_values
 statement_values_proxy = Proxy(-> statement_values)\describe "statement_values"
@@ -163,7 +166,7 @@ table_values_proxy = Proxy(-> table_values)\describe "table_values"
 local transform_value
 transform_value_proxy = Proxy(-> transform_value)\describe "transform_value"
 
-transform_fndef = t {
+transform_fndef = Scope t {
   "fndef"
 
   -- args
@@ -173,7 +176,7 @@ transform_fndef = t {
 
   types.any -- whitelist
   types.string -- type
-  types.array_of(statement_values_proxy) * implicit_return * hoist_declares
+  hoist_declares * types.array_of(statement_values_proxy) * implicit_return
 }
 
 transform_value = (types.one_of {
@@ -190,7 +193,6 @@ transform_value = (types.one_of {
   }, extra_fields: types.map_of types.number, types.string + transform_value_proxy
 
   transform_fndef
-
 
   types.any
 }) / (value) ->
@@ -272,6 +274,11 @@ statement_values = types.one_of {
   for_values
 
   t {
+    "declare"
+    types.array_of(types.string\tag "declared_names[]")
+  }
+
+  t {
     "return"
     types.shape {
       "explist"
@@ -287,7 +294,7 @@ statement_values = types.one_of {
   types.any
 }
 
-tree = types.array_of(transform_statement) * types.array_of(statement_values) * implicit_return * hoist_declares
+tree = types.array_of(transform_statement) * hoist_declares * types.array_of(statement_values) * implicit_return
 
 {:tree}
 

@@ -153,6 +153,44 @@ f = function(a, b) {
   return a;
 }]]
     }
+
+    {
+      [[
+f = (a,b) ->
+  b = "no"
+  k = "another"
+  a = b + k
+  return]]
+      [[
+var f;
+f = function(a, b) {
+  var k;
+  b = "no";
+  k = "another";
+  a = b + k;
+  return;
+}]]
+    }
+    {
+      [[
+b = "what"
+a = "another"
+f = (b) ->
+  a = "world"
+  b = "zone"
+  c = "okay"]]
+      [[
+var b, a, f;
+b = "what";
+a = "another";
+f = function(b) {
+  var c;
+  a = "world";
+  b = "zone";
+  c = "okay";
+}]]
+    }
+
   }
 
   for {input, output, :name} in *examples

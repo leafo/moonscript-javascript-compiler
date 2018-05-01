@@ -180,12 +180,18 @@ t = (tbl, ...) ->
 
   return: t({
     "return"
-    t {
-      "explist"
-      (types.any / node)\tag "value"
+    types.one_of {
+      "" -- empty return
+      t {
+        "explist"
+        (types.any / node)\tag "value"
+      }
     }
   }) % (val, state) ->
-    Line "return ", state.value
+    if v = state and state.value
+      Line "return ", v
+    else
+      "return"
 
   fndef: t({
     "fndef"
