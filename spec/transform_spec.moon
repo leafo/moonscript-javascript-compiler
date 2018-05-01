@@ -206,6 +206,35 @@ var m;
 f = "please";
 m = "hi";]]
     }
+    {
+      [[
+_i = "Yo"
+summer = "fun"
+f = ->
+  g = thing
+  for thing in *things
+    summer = "no fun" + thing
+    for item in *items
+      "ok"]]
+
+      [[
+var _i, summer, f;
+_i = "Yo";
+summer = "fun";
+f = function() {
+  var g, _i_1, thing, _i_2, item;
+  g = thing;
+  for (_i_1 = 0; _i_1 <= things.length - 1; _i_1++) {
+    thing = things[_i_1];
+    summer = "no fun" + thing;
+    for (_i_2 = 0; _i_2 <= items.length - 1; _i_2++) {
+      item = items[_i_2];
+      "ok";
+    }
+  }
+}]]
+
+    }
   }
 
   for {input, output, :name} in *examples

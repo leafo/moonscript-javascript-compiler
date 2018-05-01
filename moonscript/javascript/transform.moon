@@ -31,6 +31,7 @@ unused_name = (prefix, state) ->
   k = 1
   while declared_names and declared_names[name]
     name = "_#{prefix}_#{k}"
+    k += 1
 
   name
 
@@ -72,11 +73,21 @@ find_hoistable = types.array_of types.one_of {
     types.any
   }
 
-  t {
-    types.one_of {
-      "declare"
-      "declare_with_shadows"
+  -- declares can be removed
+  t({
+    "declare"
+    types.array_of types.one_of {
+      one_of_state("declared_names") / nil
+      one_of_state("names") / nil
+      types.string\tag "declared_names[]"
     }
+  }) * types.one_of {
+    types.shape({ "declare", types.shape {} }) / nil
+    types.any
+  }
+
+  t {
+    "declare_with_shadows"
     types.array_of(types.string\tag "declared_names[]")
   }
 
@@ -190,6 +201,7 @@ transform_foreach = Scope t({
       {"exp", length, "-", {"number", "1"}}
     }
     {
+      {"declare", {index_name}}
       {"assign", {item_var}, { item_val }}
       unpack state.block
     }
@@ -269,7 +281,7 @@ transform_fndef = Scope t {
 
   types.any -- whitelist
   types.string -- type
-  implicit_return * hoist_declares * types.array_of(transform_statement_proxy)
+  implicit_return * hoist_declares * Scope(types.array_of(transform_statement_proxy)) * hoist_declares
 }
 
 transform_return = t {
@@ -281,12 +293,6 @@ transform_return = t {
     }, extra_fields: types.map_of types.number, transform_value_proxy
   }
 }
-
--- convert to declare
-transform_declare_with_shadows = t({
-  "declare_with_shadows"
-  types.any
-}) / (v) -> {"declare", v[2], [-1]: v[-1]}
 
 transform_value = types.one_of {
   transform_chain
@@ -319,6 +325,13 @@ transform_statement = types.one_of {
     )
   }
 
+  {
+    "declare_with_shadows"
+    types.array_of(
+      one_of_state("declared_names") + types.string\tag "declared_names[]"
+    )
+  }
+
   types.shape({
     types.one_of {
       "ref", "not", "parens", "minus", "string", "number", "fndef", "table",
@@ -326,13 +339,10 @@ transform_statement = types.one_of {
     }
   }, open: true) * transform_value
 
-  -- convert the node to plain declare
-  transform_declare_with_shadows * transform_statement_proxy
-
   types.any
 }
 
-tree = implicit_return * hoist_declares * types.array_of(transform_statement) * hoist_declares
+tree = implicit_return * hoist_declares * Scope(types.array_of(transform_statement)) * hoist_declares
 
 {:tree}
 
