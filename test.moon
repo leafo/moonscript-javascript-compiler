@@ -8,13 +8,7 @@
 -- a.b = c
 
 code = [[
-hello = "world"
-if something
-  x = "cool"
-elseif dork
-  y = "cool"
-else
-  z = 10 + 2
+x = [a for a in *things]
 ]]
 
 parse = require "moonscript.parse"

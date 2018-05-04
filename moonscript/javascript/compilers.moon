@@ -212,6 +212,8 @@ match_node = (name) ->
     table.insert args, Block "{", "}", state.block
     Line unpack args
 
+  array: t({ "array" }) % -> Line "[]"
+
   table: do
     -- sum of length is less than 40
     simple_values = types.one_of {

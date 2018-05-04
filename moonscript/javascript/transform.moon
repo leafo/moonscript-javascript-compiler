@@ -348,10 +348,54 @@ transform_return = t {
   }
 }
 
+transform_comprehension = Scope t({
+  "comprehension"
+  types.any\tag "value_expression"
+  -- todo: support nested loops
+  types.shape {
+    types.shape {
+      "foreach"
+      types.any\tag "loop_vars"
+      types.any\tag "unpack"
+    }
+  }
+
+}) % (node, state) ->
+  accum_var = to_ref\transform unused_name "accum", state
+  require("moon").p state.loop_vars
+
+  fn = {
+    "fndef", {}, {}, "slim", {
+    {"assign", { accum_var }, { {"array"} }}
+    {
+      "foreach"
+      state.loop_vars
+      { state.unpack }
+      {
+        {"chain", accum_var,
+          {"dot", "push"}
+          {"call", {
+            state.value_expression
+          }}
+        }
+      }
+    }
+    {"return", {"explist", accum_var}}
+  }}
+
+  {
+    [-1]: node[-1]
+    "chain"
+    {"parens", fn}
+    {"call", {}}
+  }
+
+
 transform_value = types.one_of {
   transform_chain
   transform_table
   transform_fndef
+  transform_comprehension * transform_value_proxy
 
   types.all_of {
     t({
