@@ -287,6 +287,32 @@ return print((function() {
   }
 })());]]
     }
+    {
+      'x = [a for a in *things]'
+      [[
+var x;
+x = (function() {
+  var _accum, _i, a;
+  _accum = [];
+  for (_i = 0; _i <= things.length - 1; _i++) {
+    a = things[_i];
+    _accum.push(a);
+  }
+  return _accum;
+})();]]
+    }
+    {
+      'x = [a for a=1,3]'
+      [[var x;
+x = (function() {
+  var _accum, a;
+  _accum = [];
+  for (a = 1; a <= 3; a++) {
+    _accum.push(a);
+  }
+  return _accum;
+})();]]
+    }
   }
 
   for {input, output, :name} in *examples

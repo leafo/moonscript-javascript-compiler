@@ -352,34 +352,33 @@ transform_comprehension = Scope t({
   "comprehension"
   types.any\tag "value_expression"
   -- todo: support nested loops
-  types.shape {
+  types.array_of types.one_of({
     types.shape {
       "foreach"
-      types.any\tag "loop_vars"
-      types.any\tag "unpack"
+      types.any
+      -- for some reason the unpack syntax is inconsistent here
+      types.any / (v) -> {v}
     }
-  }
-
+    types.any -- other loops are fine?
+  })\tag "loop"
 }) % (node, state) ->
   accum_var = to_ref\transform unused_name "accum", state
-  require("moon").p state.loop_vars
+  loop = { unpack state.loop }
+
+  -- loop body
+  table.insert loop, {
+    {"chain", accum_var,
+      {"dot", "push"}
+      {"call", {
+        state.value_expression
+      }}
+    }
+  }
 
   fn = {
     "fndef", {}, {}, "slim", {
     {"assign", { accum_var }, { {"array"} }}
-    {
-      "foreach"
-      state.loop_vars
-      { state.unpack }
-      {
-        {"chain", accum_var,
-          {"dot", "push"}
-          {"call", {
-            state.value_expression
-          }}
-        }
-      }
-    }
+    loop
     {"return", {"explist", accum_var}}
   }}
 
