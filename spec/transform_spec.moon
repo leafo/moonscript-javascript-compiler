@@ -313,6 +313,23 @@ x = (function() {
   return _accum;
 })();]]
     }
+    {
+      'f = [x + y for x in *first for y in *second]'
+      [[
+var f;
+f = (function() {
+  var _accum, _i, x, _i_1, y;
+  _accum = [];
+  for (_i = 0; _i <= first.length - 1; _i++) {
+    x = first[_i];
+    for (_i_1 = 0; _i_1 <= second.length - 1; _i_1++) {
+      y = second[_i_1];
+      _accum.push(x + y);
+    }
+  }
+  return _accum;
+})();]]
+    }
   }
 
   for {input, output, :name} in *examples

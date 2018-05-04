@@ -360,25 +360,28 @@ transform_comprehension = Scope t({
       types.any / (v) -> {v}
     }
     types.any -- other loops are fine?
-  })\tag "loop"
+  })\tag "loops[]"
 }) % (node, state) ->
   accum_var = to_ref\transform unused_name "accum", state
-  loop = { unpack state.loop }
 
-  -- loop body
-  table.insert loop, {
-    {"chain", accum_var,
-      {"dot", "push"}
-      {"call", {
-        state.value_expression
-      }}
-    }
+  current = {"chain", accum_var,
+    {"dot", "push"}
+    {"call", {
+      state.value_expression
+    }}
   }
+
+  for idx=#state.loops,1,-1
+    loop = { unpack state.loops[idx] }
+    table.insert loop, {
+      current
+    }
+    current = loop
 
   fn = {
     "fndef", {}, {}, "slim", {
     {"assign", { accum_var }, { {"array"} }}
-    loop
+    current
     {"return", {"explist", accum_var}}
   }}
 
