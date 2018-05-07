@@ -52,7 +52,6 @@ transform_statement_proxy = Proxy(-> transform_statement)\describe "transform_st
 transform_value_proxy = Proxy(-> transform_value)\describe "transform_value"
 
 find_hoistable_proxy = Proxy(-> find_hoistable)\describe "find_hoistable"
-implicit_return_proxy = Proxy(-> implicit_return)\describe "implicit_return"
 
 -- prevents grabbing names already pulled or declared
 record_name = types.one_of {
@@ -198,35 +197,42 @@ hoist_declares = Scope types.array_of(find_hoistable) % (val, state) ->
   else
     val
 
-implicit_return = ArrayLastItemShape types.one_of {
-  -- things that can't be implicitly returned
-  types.shape {
-    types.one_of {
-      "return", "assign", "declare", "for", "foreach", "while"
-    }
-  }, open: true
+transform_last_expression = (fn) ->
+  local transform_last
+  transform_last_proxy = Proxy(-> transform_last)\describe "transform_last"
 
-  -- enter bodies of if statements
-  t {
-    "if"
-    types.any
-    implicit_return_proxy
-  }, extra_fields: types.map_of types.number, types.one_of {
+  transform_last = ArrayLastItemShape types.one_of {
+    -- things that can't be implicitly returned
+    types.shape {
+      types.one_of {
+        "return", "assign", "declare", "for", "foreach", "while"
+      }
+    }, open: true
+
+    -- enter bodies of if statements
     t {
-      "elseif"
-      types.any -- cond
-      implicit_return_proxy
+      "if"
+      types.any
+      transform_last_proxy
+    }, extra_fields: types.map_of types.number, types.one_of {
+      t {
+        "elseif"
+        types.any -- cond
+        transform_last_proxy
+      }
+
+      t {
+        "else"
+        transform_last_proxy
+      }
     }
 
-    t {
-      "else"
-      implicit_return_proxy
-    }
+    types.any / fn
   }
 
-  types.any / (val) -> { "return", { "explist", val } }
-}
+  transform_last
 
+implicit_return = transform_last_expression (val) -> { "return", { "explist", val } }
 
 transform_foreach = Scope t({
   "foreach"
