@@ -404,6 +404,7 @@ transform_value = types.one_of {
   transform_table
   transform_fndef
   transform_comprehension * transform_value_proxy
+  transform_accumulated_loop * transform_value_proxy
 
   types.all_of {
     t({
