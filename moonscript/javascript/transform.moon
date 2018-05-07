@@ -398,6 +398,45 @@ transform_comprehension = Scope t({
     {"call", {}}
   }
 
+transform_accumulated_loop = Scope t({
+  types.one_of {
+    "foreach"
+    "for"
+  }
+}, open: true) % (node, state) ->
+  accum_var = to_ref\transform unused_name "accum", state
+
+  -- TODO: expensive to build shape on transform, store accum in state?
+  accumulate_body = transform_last_expression (v) ->
+    {"chain", accum_var,
+      {"dot", "push"}
+      {"call", {
+        v
+      }}
+    }
+
+  accumulate_loop = types.one_of {
+    t {
+      types.one_of { "foreach", "for" }
+      types.any
+      types.any
+      types.any * accumulate_body
+    }
+  }
+
+  fn = {
+    "fndef", {}, {}, "slim", {
+    {"assign", { accum_var }, { {"array"} }}
+    assert accumulate_loop\transform node
+    {"return", {"explist", accum_var}}
+  }}
+
+  {
+    [-1]: node[-1]
+    "chain"
+    {"parens", fn}
+    {"call", {}}
+  }
 
 transform_value = types.one_of {
   transform_chain

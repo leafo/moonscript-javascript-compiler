@@ -330,6 +330,48 @@ f = (function() {
   return _accum;
 })();]]
     }
+
+    {
+      [[
+something = for thing in *things
+  umm = for hi=1,20
+    if yes
+      "cool"
+    else
+      false
+
+  if yes
+    "cool"
+  else
+    false]]
+      [[
+var something;
+something = (function() {
+  var _accum, _i, thing, umm;
+  _accum = [];
+  for (_i = 0; _i <= things.length - 1; _i++) {
+    thing = things[_i];
+    umm = (function() {
+      var _accum_1, hi;
+      _accum_1 = [];
+      for (hi = 1; hi <= 20; hi++) {
+        if (yes) {
+          _accum_1.push("cool");
+        } else {
+          _accum_1.push(false);
+        }
+      }
+      return _accum_1;
+    })();
+    if (yes) {
+      _accum.push("cool");
+    } else {
+      _accum.push(false);
+    }
+  }
+  return _accum;
+})();]]
+    }
   }
 
   for {input, output, :name} in *examples
