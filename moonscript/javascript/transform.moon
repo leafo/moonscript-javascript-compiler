@@ -121,6 +121,20 @@ find_hoistable = types.one_of {
   }
 
   t {
+    "foreach"
+    types.array_of(record_name)
+
+    types.shape {
+      types.shape {
+        "unpack"
+        find_hoistable_proxy
+      }
+    }
+
+    find_hoistable_statements
+  }
+
+  t {
     "while"
     find_hoistable_proxy -- cond
     find_hoistable_statements

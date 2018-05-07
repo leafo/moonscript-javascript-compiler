@@ -59,7 +59,7 @@ if (something) {
 for thing in *items
   print thing]]
       [[
-var _i, thing;
+var thing, _i;
 for (_i = 0; _i <= items.length - 1; _i++) {
   thing = items[_i];
   print(thing);
@@ -222,7 +222,7 @@ var _i, summer, f;
 _i = "Yo";
 summer = "fun";
 f = function() {
-  var g, _i_1, thing, _i_2, item;
+  var g, thing, item, _i_1, _i_2;
   g = thing;
   for (_i_1 = 0; _i_1 <= things.length - 1; _i_1++) {
     thing = things[_i_1];
@@ -292,7 +292,7 @@ return print((function() {
       [[
 var x;
 x = (function() {
-  var _accum, _i, a;
+  var _accum, a, _i;
   _accum = [];
   for (_i = 0; _i <= things.length - 1; _i++) {
     a = things[_i];
@@ -318,7 +318,7 @@ x = (function() {
       [[
 var f;
 f = (function() {
-  var _accum, _i, x, _i_1, y;
+  var _accum, x, y, _i, _i_1;
   _accum = [];
   for (_i = 0; _i <= first.length - 1; _i++) {
     x = first[_i];
@@ -345,14 +345,14 @@ something = for thing in *things
   else
     false]]
       [[
-var something;
+var something, thing, umm, hi;
 something = (function() {
-  var _accum, _i, thing, umm;
+  var _accum, _i;
   _accum = [];
   for (_i = 0; _i <= things.length - 1; _i++) {
     thing = things[_i];
     umm = (function() {
-      var _accum_1, hi;
+      var _accum_1;
       _accum_1 = [];
       for (hi = 1; hi <= 20; hi++) {
         if (yes) {
