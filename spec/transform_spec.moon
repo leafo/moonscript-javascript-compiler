@@ -372,6 +372,25 @@ something = (function() {
   return _accum;
 })();]]
     }
+    {
+      [[
+f = while k > 5
+  z = "9"
+  "yeah" + 9
+]]
+      [[
+var f, z;
+f = (function() {
+  var _accum;
+  _accum = [];
+  while (k > 5) {
+    z = "9";
+    _accum.push("yeah" + 9);
+  }
+  return _accum;
+})();]]
+
+    }
   }
 
   for {input, output, :name} in *examples

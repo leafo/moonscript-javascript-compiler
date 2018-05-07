@@ -416,6 +416,7 @@ transform_accumulated_loop = Scope t({
   types.one_of {
     "foreach"
     "for"
+    "while"
   }
 }, open: true) % (node, state) ->
   accum_var = to_ref\transform unused_name "accum", state
@@ -430,9 +431,16 @@ transform_accumulated_loop = Scope t({
     }
 
   accumulate_loop = types.one_of {
-    t {
+    types.shape {
+      [-1]: types.any
       types.one_of { "foreach", "for" }
       types.any
+      types.any
+      types.any * accumulate_body
+    }
+    types.shape {
+      [-1]: types.any
+      "while"
       types.any
       types.any * accumulate_body
     }
