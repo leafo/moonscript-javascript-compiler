@@ -181,6 +181,20 @@ find_hoistable = types.one_of {
     }
   }
 
+  -- find bound this
+  types.shape({
+    "fndef"
+    [4]: "fat"
+  }, open: true) * t {
+    "fndef"
+    types.any
+    types.any
+    types.literal("fat")\tag(
+      (s) -> s.bind_this = true
+    ) / "slim"
+    types.any
+  }
+
   types.any
 }
 
