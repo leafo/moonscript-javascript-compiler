@@ -8,13 +8,17 @@ statements_value_visitor = (value_shape) ->
   statements_proxy = Proxy(-> statements)\describe "value visitor statements"
   value_proxy = Proxy(-> value)\describe "value visitor"
 
-  value = value_shape + types.one_of {
+  value = types.one_of {
     t {
       "fndef"
-      array_of types.one_of {
+      types.array_of types.one_of {
         types.shape { types.any } -- argument name
         types.shape { types.any, value_proxy } -- argument name & default value
       }
+
+      types.any -- whitelist
+      types.string -- type
+      statements_proxy
     }
 
     t {
@@ -26,10 +30,32 @@ statements_value_visitor = (value_shape) ->
       "exp"
     }, extra_fields: types.map_of types.number, types.string + value_proxy
 
-    -- TODO: comprehension
+    t {
+      "comprehension"
+      value_proxy
+      types.array_of types.one_of {
+        types.shape {
+          "foreach"
+          types.any
+          types.one_of {
+            types.shape {
+              "unpack"
+              value_proxy
+            }
+            value_proxy
+          }
+        }
+
+      }
+    }
+
+    -- TODO: oop accumulator
+    -- TODO: if expression
 
     types.any
   }
+
+  value = value_shape * types.assert(value) + value
 
   statements = types.array_of types.one_of {
     t {
@@ -128,6 +154,8 @@ statements_value_visitor = (value_shape) ->
 
     value
   }
+
+  statements
 
 
 {:statements_value_visitor}
