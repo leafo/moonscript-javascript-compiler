@@ -49,35 +49,20 @@ statements_value_visitor = (value_shape) ->
       }
     }
 
-    -- TODO: oop accumulator
-    -- TODO: if expression
-
-    types.any
-  }
-
-  value = value_shape * types.assert(value) + value
-
-  statements = types.array_of types.one_of {
-    t {
-      "assign"
-      types.any
-      types.array_of(statements_proxy)
-    }
-
     t {
       "if"
-      value
-      types.array_of(statements_proxy)
+      value_proxy
+      statements_proxy
     }, extra_fields: types.map_of types.number, types.one_of {
       t {
         "elseif"
-        value
-        types.array_of(statements_proxy)
+        value_proxy
+        statements_proxy
       }
 
       t {
         "else"
-        types.array_of(statements_proxy)
+        statements_proxy
       }
     }
 
@@ -85,9 +70,9 @@ statements_value_visitor = (value_shape) ->
       "for"
       types.any
       types.shape {
-        value
-        value
-        types.nil + value
+        value_proxy
+        value_proxy
+        types.nil + value_proxy
       }
       statements_proxy
     }
@@ -99,31 +84,61 @@ statements_value_visitor = (value_shape) ->
       types.shape {
         types.shape {
           "unpack"
-          value
+          value_proxy
         }
       }
 
       statements_proxy
     }
 
-
     t {
       "while"
-      value -- cond
+      value_proxy -- cond
       statements_proxy
     }
 
     t {
+      "table"
+      types.array_of types.one_of {
+        -- array items
+        types.array_of value_proxy, length: types.literal(1)
+
+        -- object items
+        types.shape {
+          types.one_of {
+            types.shape { "key_literal" }, open: true
+            value_proxy
+          }
+          value_proxy
+        }
+      }
+    }
+
+    t {
       "chain"
-      value
+      value_proxy
     }, extra_fields: types.map_of(
       types.number
       types.one_of {
-        types.shape {"index", value}
-        types.shape {"call", types.array_of(value)}
+        types.shape {"index", value_proxy}
+        types.shape {"call", types.array_of(value_proxy)}
         types.any
       }
     )
+
+    types.any
+  }
+
+  value = value_shape * types.assert(value) + value
+
+  statements = types.array_of types.one_of {
+    t {
+      "assign"
+      types.any
+      -- statements_proxy
+      types.array_of value
+      -- types.any
+    }
 
     t {
       "return"
@@ -132,23 +147,6 @@ statements_value_visitor = (value_shape) ->
           types.number
           value
         )
-      }
-    }
-
-    t {
-      "table"
-      types.array_of types.one_of {
-        -- array items
-        types.array_of value, length: types.literal(1)
-
-        -- object items
-        types.shape {
-          types.one_of {
-            types.shape { "key_literal" }, open: true
-            value
-          }
-          value
-        }
       }
     }
 
