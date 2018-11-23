@@ -391,6 +391,14 @@ f = (function() {
 })();]]
 
     }
+    {
+      [[f = => console.log this]]
+      [[var _this, f;
+_this = this;
+f = function() {
+  return console.log(_this);
+}]]
+    }
   }
 
   for {input, output, :name} in *examples
