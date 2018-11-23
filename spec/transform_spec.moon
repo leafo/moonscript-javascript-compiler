@@ -401,15 +401,16 @@ f = function() {
     }
 
     {
-      [[ f = =>
+      [[f = =>
   console.log this
 
   thwap = =>
     this
 
   func = ->
-    this]]
-    [[var _this, f;
+    this
+m = => this]]
+    [[var _this, f, m;
 _this = this;
 f = function() {
   var thwap, func;
@@ -420,6 +421,9 @@ f = function() {
   func = function() {
     return this;
   }
+}
+m = function() {
+  return _this;
 }]]
 
     }
