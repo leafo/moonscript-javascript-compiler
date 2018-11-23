@@ -1,6 +1,7 @@
 
 import types from require "tableshape"
 import Proxy, ArrayLastItemShape, t from require "moonscript.javascript.util"
+import statements_value_visitor from require "moonscript.javascript.visitors"
 
 -- an inherited scope
 class Scope extends types.scope
@@ -12,7 +13,10 @@ TEN = {"number", 10}
 
 debug = (str, node) ->
   node % (val, state) ->
-    print str, require("moon").dump state
+    print str, require("moon").dump {
+      val
+      state
+    }
     val
 
 match_node = (name) ->
@@ -52,6 +56,12 @@ transform_statement_proxy = Proxy(-> transform_statement)\describe "transform_st
 transform_value_proxy = Proxy(-> transform_value)\describe "transform_value"
 
 find_hoistable_proxy = Proxy(-> find_hoistable)\describe "find_hoistable"
+
+
+-- converts all regular "this" to the bound this 
+bind_this_visitor = statements_value_visitor types.shape({"ref", "this"}, open: true) % (v, state) ->
+  assert state.bind_this, "missing state for bind this"
+  { [-1]: v[-1], "ref", state.bind_this }
 
 -- prevents grabbing names already pulled or declared
 record_name = types.one_of {
@@ -190,9 +200,9 @@ find_hoistable = types.one_of {
     types.any
     types.any
     types.literal("fat")\tag(
-      (s) -> s.bind_this = true
+      (s) ->s.bind_this or= unused_name("this", state)
     ) / "slim"
-    types.any
+    bind_this_visitor
   }
 
   types.any
@@ -207,23 +217,38 @@ existing_declare = types.shape {
 }, open: true
 
 hoist_declares = Scope types.array_of(find_hoistable) % (val, state) ->
-  if state and state.names
-    ed = existing_declare(val)
+  names = state and state.names
 
-    k, names = if ed
-      for name in *state.names
-        table.insert ed.names, name
-
-      2, ed.names
+  if state and state.bind_this
+    if names
+      names = {state.bind_this, unpack names}
     else
-      1, state.names
+      names = {state.bind_this}
 
-    {
-      {"declare", names}
-      unpack val, k
-    }
+  unless names and next names
+    -- nothing hoisted
+    return val
+
+  ed = existing_declare(val)
+
+  k, names = if ed
+    for name in *names
+      table.insert ed.names, name
+
+    2, ed.names
   else
-    val
+    1, names
+
+  out = {
+    {"declare", names}
+    if state.bind_this
+      {"assign", {{"ref", state.bind_this}}, {{"ref", "this"}}}
+  }
+
+  for i=k,#val
+    table.insert out, val[i]
+
+  out
 
 transform_last_expression = (fn) ->
   local transform_last
@@ -542,7 +567,12 @@ transform_statement = types.one_of {
   types.any
 }
 
-tree = implicit_return * hoist_declares * Scope(types.array_of(transform_statement)) * hoist_declares
+tree = types.all_of {
+  implicit_return
+  hoist_declares
+  Scope(types.array_of(transform_statement))
+  hoist_declares
+}
 
 {:tree}
 
