@@ -399,6 +399,30 @@ f = function() {
   return console.log(_this);
 }]]
     }
+
+    {
+      [[ f = =>
+  console.log this
+
+  thwap = =>
+    this
+
+  func = ->
+    this]]
+    [[var _this, f;
+_this = this;
+f = function() {
+  var thwap, func;
+  console.log(_this);
+  thwap = function() {
+    return _this;
+  }
+  func = function() {
+    return this;
+  }
+}]]
+
+    }
   }
 
   for {input, output, :name} in *examples

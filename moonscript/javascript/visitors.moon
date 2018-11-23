@@ -3,7 +3,9 @@ import types from require "tableshape"
 import Proxy, t from require "moonscript.javascript.util"
 
 -- operates on statements
-statements_value_visitor = (value_visitor) ->
+statements_value_visitor = (opts={}) ->
+  {:value_visitor, :value_halt} = opts
+
   local statements, value
   statements_proxy = Proxy(-> statements)\describe "value visitor statements"
   value_proxy = Proxy(-> value)\describe "value visitor"
@@ -130,6 +132,8 @@ statements_value_visitor = (value_visitor) ->
   }
 
   value = value_visitor * types.assert(value) + value
+  if value_halt
+    value = value_halt + value
 
   statements = types.array_of types.one_of {
     t {

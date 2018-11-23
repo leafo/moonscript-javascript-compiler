@@ -1,4 +1,3 @@
-
 import types from require "tableshape"
 import Proxy, ArrayLastItemShape, t from require "moonscript.javascript.util"
 import statements_value_visitor from require "moonscript.javascript.visitors"
@@ -59,9 +58,28 @@ find_hoistable_proxy = Proxy(-> find_hoistable)\describe "find_hoistable"
 
 
 -- converts all regular "this" to the bound this 
-bind_this_visitor = statements_value_visitor types.shape({"ref", "this"}, open: true) % (v, state) ->
-  assert state.bind_this, "missing state for bind this"
-  { [-1]: v[-1], "ref", state.bind_this }
+bind_this_visitor = statements_value_visitor {
+  value_visitor: types.one_of {
+    types.shape({"ref", "this"}, open: true) % (v, state) ->
+      assert state.bind_this, "missing state for bind this"
+      { [-1]: v[-1], "ref", state.bind_this }
+
+    -- far arrow in same scope get automatically converted and visited
+    types.shape({
+      "fndef"
+      [4]: "fat"
+    }, open: true) / (node) ->
+      copy = {k,v for k,v in pairs node}
+      copy[4] = "slim"
+      copy
+  }
+
+  -- stop on slim arrows becuase they create new scope
+  value_halt: types.shape {
+    "fndef"
+    [4]: "slim"
+  }, open: true
+}
 
 -- prevents grabbing names already pulled or declared
 record_name = types.one_of {
@@ -200,7 +218,17 @@ find_hoistable = types.one_of {
     types.any
     types.any
     types.literal("fat")\tag(
-      (s) ->s.bind_this or= unused_name("this", state)
+      (s) ->
+        unless s.bind_this
+          s.bind_this = unused_name("this", state)
+          names = {}
+          if s.names
+            for name in *s.names
+              table.insert names, name
+
+          table.insert names, s.bind_this
+          s.names = names
+
     ) / "slim"
     bind_this_visitor
   }
