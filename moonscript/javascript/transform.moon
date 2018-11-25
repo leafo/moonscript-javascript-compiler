@@ -557,6 +557,22 @@ transform_value = types.one_of {
     transform_value_proxy
   }
 
+  t({"string"}, open: true) % (node) ->
+    if #node > 3
+      out = {[-1]: node[-1], "exp"}
+      convert_chunk_expression = types.one_of {
+        types.string / (v) -> {[-1]: node[-1], "string", node[2], v}
+        t({"interpolate", types.any}) / (v) -> v[2]
+      }
+      for idx=3,#node
+        val = convert_chunk_expression\transform node[idx]
+        if idx > 3
+          table.insert out, "+"
+        table.insert out, val
+      out
+    else
+      node
+
   t {
     "exp"
   }, extra_fields: types.map_of types.number, types.string + transform_value_proxy

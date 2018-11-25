@@ -392,6 +392,10 @@ f = (function() {
 
     }
     {
+      [["hello #{world} test"]]
+      [[return "hello " + world + " test";]]
+    }
+    {
       [[f = => console.log this]]
       [[var _this, f;
 _this = this;
