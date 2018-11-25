@@ -570,6 +570,8 @@ transform_value = types.one_of {
           table.insert out, "+"
         table.insert out, val
       out
+    elseif types.shape({ [-1]: types.any, "string", types.any, t({"interpolate"}, open: true) }) node
+      {"exp", {"string", '"', ""}, "+", node[3][2]}
     else
       node
 

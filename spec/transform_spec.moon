@@ -396,6 +396,14 @@ f = (function() {
       [[return "hello " + world + " test";]]
     }
     {
+      [["#{world} one #{two}#{three} four #{five}"]]
+      [[return world + " one " + two + three + " four " + five;]]
+    }
+    {
+      [["#{world}"]]
+      [[return "" + world;]]
+    }
+    {
       [[f = => console.log this]]
       [[var _this, f;
 _this = this;
