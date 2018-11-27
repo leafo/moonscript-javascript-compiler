@@ -194,12 +194,15 @@ match_node = (name) ->
     types.array_of types.shape {
       types.string\tag "args[]"
     }
-    types.table -- whitelist, unused
+    -- whitelist, used for options
+    types.shape {
+      name: types.nil + types.string\tag "name"
+    }
     types.string\tag "type"
     types.table\tag "block"
   }) % (val, state) ->
     args = {
-      "function("
+      state.name and "function #{state.name}(" or "function("
     }
 
     if state.args

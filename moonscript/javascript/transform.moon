@@ -527,10 +527,25 @@ transform_accumulated_loop = Scope t({
     {"call", {}}
   }
 
+transform_class = t({
+  "class"
+  types.any -- name
+  types.any -- parent
+  types.any -- body
+}) % (node, state) ->
+  {
+    "fndef"
+    {}
+    { name: node[2] }
+    "slim"
+    {}
+  }
+
 transform_value = types.one_of {
   transform_chain
   transform_table
   transform_fndef
+  transform_class
   transform_comprehension * transform_value_proxy
   transform_accumulated_loop * transform_value_proxy
 
