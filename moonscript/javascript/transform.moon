@@ -628,6 +628,83 @@ transform_statement = types.one_of {
   types.any
 }
 
+local transform_two
+transform_two_proxy = Proxy(-> transform_two)\describe "transform_two"
+transform_two = statements_value_visitor {
+  value_visitor: types.one_of {
+    -- transform_fndef --edited version
+
+    Scope t {
+      "fndef"
+
+      -- args
+      types.array_of types.shape {
+        types.string\tag "declared_names[]"
+      }
+
+      types.any -- whitelist
+      types.string -- type
+      implicit_return * hoist_declares * Scope(transform_two_proxy) * hoist_declares
+    }
+
+    transform_class
+    transform_comprehension
+    transform_accumulated_loop
+
+    t({
+      "if"
+    }, open: true) % (node) ->
+      fn = {"fndef", {}, {}, "slim", {
+        node
+      }}
+
+      {
+        [-1]: node[-1]
+        "chain"
+        {"parens", fn}
+        {"call", {}}
+      }
+
+    t({"string"}, open: true) % (node) ->
+      if #node > 3
+        out = {[-1]: node[-1], "exp"}
+        convert_chunk_expression = types.one_of {
+          types.string / (v) -> {[-1]: node[-1], "string", node[2], v}
+          t({"interpolate", types.any}) / (v) -> v[2]
+        }
+        for idx=3,#node
+          val = convert_chunk_expression\transform node[idx]
+          if idx > 3
+            table.insert out, "+"
+          table.insert out, val
+        out
+      elseif types.shape({ [-1]: types.any, "string", types.any, t({"interpolate"}, open: true) }) node
+        {"exp", {"string", '"', ""}, "+", node[3][2]}
+      else
+        node
+
+  }
+
+  statement_visitor: types.one_of {
+    transform_foreach
+
+    t {
+      "declare"
+      types.array_of(
+        one_of_state("declared_names") + types.string\tag "declared_names[]"
+      )
+    }
+
+    {
+      "declare_with_shadows"
+      types.array_of(
+        one_of_state("declared_names") + types.string\tag "declared_names[]"
+      )
+    }
+  }
+}
+
+
 tree = types.all_of {
   implicit_return
   hoist_declares
