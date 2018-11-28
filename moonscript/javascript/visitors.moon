@@ -10,7 +10,60 @@ statements_value_visitor = (opts={}) ->
   statements_proxy = Proxy(-> statements)\describe "value visitor statements"
   value_proxy = Proxy(-> value)\describe "value visitor"
 
+  if_visitor = t {
+    "if"
+    value_proxy
+    statements_proxy
+  }, extra_fields: types.map_of types.number, types.one_of {
+    t {
+      "elseif"
+      value_proxy
+      statements_proxy
+    }
+
+    t {
+      "else"
+      statements_proxy
+    }
+  }
+
+  for_visitor = t {
+    "for"
+    types.any
+    types.shape {
+      value_proxy
+      value_proxy
+      types.nil + value_proxy
+    }
+    statements_proxy
+  }
+
+  foreach_visitor = t {
+    "foreach"
+    types.array_of(types.any)
+
+    types.shape {
+      types.shape {
+        "unpack"
+        value_proxy
+      }
+    }
+
+    statements_proxy
+  }
+
+  while_visitor = t {
+    "while"
+    value_proxy -- cond
+    statements_proxy
+  }
+
   value = types.one_of {
+    if_visitor
+    for_visitor
+    foreach_visitor
+    while_visitor
+
     t {
       "fndef"
       types.array_of types.one_of {
@@ -51,53 +104,6 @@ statements_value_visitor = (opts={}) ->
       }
     }
 
-    t {
-      "if"
-      value_proxy
-      statements_proxy
-    }, extra_fields: types.map_of types.number, types.one_of {
-      t {
-        "elseif"
-        value_proxy
-        statements_proxy
-      }
-
-      t {
-        "else"
-        statements_proxy
-      }
-    }
-
-    t {
-      "for"
-      types.any
-      types.shape {
-        value_proxy
-        value_proxy
-        types.nil + value_proxy
-      }
-      statements_proxy
-    }
-
-    t {
-      "foreach"
-      types.array_of(types.any)
-
-      types.shape {
-        types.shape {
-          "unpack"
-          value_proxy
-        }
-      }
-
-      statements_proxy
-    }
-
-    t {
-      "while"
-      value_proxy -- cond
-      statements_proxy
-    }
 
     t {
       "table"
@@ -138,6 +144,11 @@ statements_value_visitor = (opts={}) ->
     value = value_halt + value
 
   statement = types.one_of {
+    if_visitor
+    for_visitor
+    foreach_visitor
+    while_visitor
+
     t {
       "assign"
       types.any
@@ -161,6 +172,6 @@ statements_value_visitor = (opts={}) ->
     statement = statement_visitor * types.assert(statement) + statement
 
   statements = types.array_of statement
-  statements
+  statements, value
 
 {:statements_value_visitor}
