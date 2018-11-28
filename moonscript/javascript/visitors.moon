@@ -4,7 +4,7 @@ import Proxy, t from require "moonscript.javascript.util"
 
 -- operates on statements
 statements_value_visitor = (opts={}) ->
-  {:value_visitor, :value_halt} = opts
+  {:value_visitor, :statement_visitor, :value_halt} = opts
 
   local statements, value
   statements_proxy = Proxy(-> statements)\describe "value visitor statements"
@@ -131,11 +131,13 @@ statements_value_visitor = (opts={}) ->
     types.any
   }
 
-  value = value_visitor * types.assert(value) + value
+  if value_visitor
+    value = value_visitor * types.assert(value) + value
+
   if value_halt
     value = value_halt + value
 
-  statements = types.array_of types.one_of {
+  statement = types.one_of {
     t {
       "assign"
       types.any
@@ -155,7 +157,10 @@ statements_value_visitor = (opts={}) ->
     value
   }
 
-  statements
+  if statement_visitor
+    statement = statement_visitor * types.assert(statement) + statement
 
+  statements = types.array_of statement
+  statements
 
 {:statements_value_visitor}
