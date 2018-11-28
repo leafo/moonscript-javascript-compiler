@@ -48,14 +48,9 @@ one_of_state = (field) ->
     nil, "not in state"
 
 
-
 local *
 
-transform_statement_proxy = Proxy(-> transform_statement)\describe "transform_statement"
-transform_value_proxy = Proxy(-> transform_value)\describe "transform_value"
-
 find_hoistable_proxy = Proxy(-> find_hoistable)\describe "find_hoistable"
-
 
 -- converts all regular "this" to the bound this 
 bind_this_visitor = statements_value_visitor {
@@ -220,7 +215,7 @@ find_hoistable = types.one_of {
     types.literal("fat")\tag(
       (s) ->
         unless s.bind_this
-          s.bind_this = unused_name("this", state)
+          s.bind_this = unused_name("this", s)
           names = {}
           if s.names
             for name in *s.names
@@ -348,93 +343,6 @@ transform_foreach = Scope t({
     [-1]: value[-1]
   }
 
-transform_for = t {
-  "for"
-  types.any -- loop variable
-  types.shape {
-    transform_value_proxy
-    transform_value_proxy
-    types.nil + transform_value_proxy
-  }
-  types.array_of(transform_statement_proxy)
-}
-
-transform_chain = t {
-  "chain"
-  transform_value_proxy -- root
-}, extra_fields: types.map_of(
-  types.number
-  types.one_of {
-    types.shape {"index", transform_value_proxy}
-    types.shape {"call", types.array_of(transform_value_proxy)}
-    types.any
-  }
-)
-
-transform_assign = t {
-  "assign"
-  types.any -- names
-  types.array_of(transform_value_proxy)
-}
-
--- TODO: refactor this into visitor constructors to avoid duplication
-transform_table = t {
-  "table"
-  types.array_of types.one_of {
-    -- array items
-    types.array_of transform_value_proxy, length: types.literal(1)
-
-    -- object items
-    types.shape {
-      types.one_of {
-        types.shape { "key_literal" }, open: true
-        transform_value_proxy
-      }
-      transform_value_proxy
-    }
-  }
-}
-
-transform_if = t {
-  "if"
-  transform_value_proxy
-  types.array_of(transform_statement_proxy)
-}, extra_fields: types.map_of types.number, types.one_of {
-  t {
-    "elseif"
-    transform_value_proxy
-    types.array_of(transform_statement_proxy)
-  }
-
-  t {
-    "else"
-    types.array_of(transform_statement_proxy)
-  }
-}
-
-transform_fndef = Scope t {
-  "fndef"
-
-  -- args
-  types.array_of types.shape {
-    types.string\tag "declared_names[]"
-  }
-
-  types.any -- whitelist
-  types.string -- type
-  implicit_return * hoist_declares * Scope(types.array_of(transform_statement_proxy)) * hoist_declares
-}
-
-transform_return = t {
-  "return"
-  types.one_of {
-    ""
-    types.shape {
-      "explist"
-    }, extra_fields: types.map_of types.number, transform_value_proxy
-  }
-}
-
 transform_comprehension = Scope t({
   "comprehension"
   types.any\tag "value_expression"
@@ -541,99 +449,10 @@ transform_class = t({
     {}
   }
 
-transform_value = types.one_of {
-  transform_chain
-  transform_table
-  transform_fndef
-  transform_class
-  transform_comprehension * transform_value_proxy
-  transform_accumulated_loop * transform_value_proxy
-
-  types.all_of {
-    t({
-      "if"
-    }, open: true) % (node) ->
-      fn = {"fndef", {}, {}, "slim", {
-        node
-      }}
-
-      {
-        [-1]: node[-1]
-        "chain"
-        {"parens", fn}
-        {"call", {}}
-      }
-
-    transform_value_proxy
-  }
-
-  t {
-    types.one_of { "parens", "not", "minus" }
-    transform_value_proxy
-  }
-
-  t({"string"}, open: true) % (node) ->
-    if #node > 3
-      out = {[-1]: node[-1], "exp"}
-      convert_chunk_expression = types.one_of {
-        types.string / (v) -> {[-1]: node[-1], "string", node[2], v}
-        t({"interpolate", types.any}) / (v) -> v[2]
-      }
-      for idx=3,#node
-        val = convert_chunk_expression\transform node[idx]
-        if idx > 3
-          table.insert out, "+"
-        table.insert out, val
-      out
-    elseif types.shape({ [-1]: types.any, "string", types.any, t({"interpolate"}, open: true) }) node
-      {"exp", {"string", '"', ""}, "+", node[3][2]}
-    else
-      node
-
-  t {
-    "exp"
-  }, extra_fields: types.map_of types.number, types.string + transform_value_proxy
-
-  types.any
-}
-
-transform_statement = types.one_of {
-  transform_foreach * transform_statement_proxy
-  transform_for
-  transform_assign
-  transform_if
-  transform_return
-
-  t {
-    "declare"
-    types.array_of(
-      one_of_state("declared_names") + types.string\tag "declared_names[]"
-    )
-  }
-
-  {
-    "declare_with_shadows"
-    types.array_of(
-      one_of_state("declared_names") + types.string\tag "declared_names[]"
-    )
-  }
-
-  types.shape({
-    types.one_of {
-      "ref", "not", "parens", "minus", "string", "number", "fndef", "table",
-      "chain"
-    }
-  }, open: true) * transform_value
-
-  types.any
-}
-
 local transform_two
 transform_two_proxy = Proxy(-> transform_two)\describe "transform_two"
 transform_two = statements_value_visitor {
   value_visitor: types.one_of {
-    -- transform_fndef --edited version
-
     Scope t {
       "fndef"
 
@@ -708,7 +527,8 @@ transform_two = statements_value_visitor {
 tree = types.all_of {
   implicit_return
   hoist_declares
-  Scope(types.array_of(transform_statement))
+  -- Scope(types.array_of(transform_statement))
+  Scope transform_two
   hoist_declares
 }
 
