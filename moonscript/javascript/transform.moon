@@ -449,9 +449,9 @@ transform_class = t({
     {}
   }
 
-local transform_two
-transform_two_proxy = Proxy(-> transform_two)\describe "transform_two"
-transform_two = statements_value_visitor {
+local transform_statements
+transform_statements_proxy = Proxy(-> transform_statements)\describe "transform_statements"
+transform_statements = statements_value_visitor {
   value_visitor: types.one_of {
     Scope t {
       "fndef"
@@ -463,7 +463,7 @@ transform_two = statements_value_visitor {
 
       types.any -- whitelist
       types.string -- type
-      implicit_return * hoist_declares * Scope(transform_two_proxy) * hoist_declares
+      implicit_return * hoist_declares * Scope(transform_statements_proxy) * hoist_declares
     }
 
     transform_class
@@ -527,8 +527,7 @@ transform_two = statements_value_visitor {
 tree = types.all_of {
   implicit_return
   hoist_declares
-  -- Scope(types.array_of(transform_statement))
-  Scope transform_two
+  Scope transform_statements
   hoist_declares
 }
 
